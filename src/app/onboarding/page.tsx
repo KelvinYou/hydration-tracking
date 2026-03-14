@@ -9,6 +9,10 @@ import {
   setGuestOnboarded,
 } from "@/lib/guest-storage";
 import { UnitPreference } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -80,89 +84,92 @@ export default function OnboardingPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name */}
           <div className="space-y-2">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
               Name
-            </label>
-            <input
+            </Label>
+            <Input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="h-12 px-4 rounded-xl"
             />
           </div>
 
           {/* Weight */}
           <div className="space-y-2">
-            <label htmlFor="weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <Label htmlFor="weight" className="text-gray-700 dark:text-gray-300">
               Weight (kg)
-            </label>
-            <input
+            </Label>
+            <Input
               id="weight"
               type="number"
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
               placeholder="e.g., 70"
               required
-              min="20"
-              max="300"
-              step="0.1"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min={20}
+              max={300}
+              step={0.1}
+              className="h-12 px-4 rounded-xl"
             />
           </div>
 
           {/* Unit Preference */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <Label className="text-gray-700 dark:text-gray-300">
               Preferred Unit
-            </label>
+            </Label>
             <div className="grid grid-cols-2 gap-3">
               {(["ml", "oz"] as const).map((u) => (
-                <button
+                <Button
                   key={u}
                   type="button"
+                  variant={unit === u ? "default" : "secondary"}
                   onClick={() => setUnit(u)}
-                  className={`py-3 rounded-xl font-medium transition-colors ${
+                  className={`h-12 rounded-xl font-medium ${
                     unit === u
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                      ? "bg-blue-500 hover:bg-blue-600 text-white"
+                      : ""
                   }`}
                 >
                   {u === "ml" ? "Milliliters (ml)" : "Ounces (oz)"}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
 
           {/* Calculated Goal */}
           {weight > 0 && (
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                Your recommended daily goal:
-              </p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {unit === "oz"
-                  ? `${Math.round(dailyGoalMl / 29.5735)} oz`
-                  : `${dailyGoalMl.toLocaleString()} ml`}
-              </p>
-              <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
-                Based on {weight} kg &times; 35 ml/kg
-              </p>
-            </div>
+            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 ring-0">
+              <CardContent>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Your recommended daily goal:
+                </p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {unit === "oz"
+                    ? `${Math.round(dailyGoalMl / 29.5735)} oz`
+                    : `${dailyGoalMl.toLocaleString()} ml`}
+                </p>
+                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                  Based on {weight} kg &times; 35 ml/kg
+                </p>
+              </CardContent>
+            </Card>
           )}
 
           {error && (
             <p className="text-sm text-red-500 text-center">{error}</p>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={!weight || weight <= 0 || saving}
-            className="w-full py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white font-semibold rounded-xl text-lg transition-colors"
+            className="w-full h-14 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white font-semibold rounded-xl text-lg"
           >
             {saving ? "Saving..." : "Start Tracking"}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function LandingPage() {
   return (
@@ -65,24 +67,26 @@ export default function LandingPage() {
                 desc: "Get nudged when you fall behind",
               },
             ].map((feature) => (
-              <div key={feature.title} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-900">
-                <span className="text-blue-500 mt-0.5 shrink-0">{feature.icon}</span>
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">{feature.title}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{feature.desc}</p>
-                </div>
-              </div>
+              <Card key={feature.title} className="ring-0 bg-gray-50 dark:bg-gray-900 py-0">
+                <CardContent className="flex items-start gap-3 p-3">
+                  <span className="text-blue-500 mt-0.5 shrink-0">{feature.icon}</span>
+                  <div>
+                    <p className="font-semibold text-gray-900 dark:text-white">{feature.title}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{feature.desc}</p>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
 
           {/* CTA */}
           <div className="space-y-3 pt-4">
-            <Link
-              href="/login"
-              className="block w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl text-center text-lg transition-colors"
+            <Button
+              className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl text-lg"
+              render={<Link href="/login" />}
             >
               Get Started
-            </Link>
+            </Button>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Free forever. No credit card required.
             </p>

@@ -9,6 +9,8 @@ import { formatAmount } from "@/lib/units";
 import { calculateHydrationScore } from "@/lib/hydration-score";
 import { formatTime } from "@/lib/utils";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 const SCORE_TEXT: Record<HydrationScore["level"], string> = {
   excellent: "text-green-600 dark:text-green-400",
@@ -122,15 +124,16 @@ export default function HistoryPage() {
           <>
             {selectedDay ? (
               <div className="space-y-4">
-                <button
+                <Button
+                  variant="link"
                   onClick={() => setSelectedDate(null)}
-                  className="text-blue-500 font-medium flex items-center gap-1 text-sm min-h-[44px]"
+                  className="text-blue-500 font-medium p-0 h-11 gap-1"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                   All Days
-                </button>
+                </Button>
 
                 <div className="space-y-2">
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -190,13 +193,10 @@ export default function HistoryPage() {
                         <p className="text-sm text-gray-500">
                           {formatAmount(day.total, unit)} / {formatAmount(dailyGoalMl, unit)}
                         </p>
-                        {/* Progress bar */}
-                        <div className="mt-1.5 h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-blue-500 transition-all"
-                            style={{ width: `${progressPct}%` }}
-                          />
-                        </div>
+                        <Progress
+                          value={progressPct}
+                          className="mt-1.5 **:data-[slot=progress-track]:h-1.5"
+                        />
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="text-right">

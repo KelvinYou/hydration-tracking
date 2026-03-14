@@ -11,6 +11,9 @@ import { formatAmount } from "@/lib/units";
 import { isGuestMode } from "@/lib/guest-storage";
 import { useReminders } from "@/hooks/use-reminders";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -94,7 +97,7 @@ export default function DashboardPage() {
           </h1>
           <div className="flex items-center gap-1">
             {streaks.current > 0 && (
-              <span className="flex items-center gap-1 text-sm font-medium text-orange-500 px-2 py-1">
+              <Badge variant="outline" className="gap-1 text-orange-500 border-orange-200 dark:border-orange-800">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18a3.75 3.75 0 00.495-7.467 5.99 5.99 0 00-1.925 3.546 5.974 5.974 0 01-2.133-1A3.75 3.75 0 0012 18z" />
@@ -102,18 +105,19 @@ export default function DashboardPage() {
                 <span aria-label={`${streaks.current} day streak`}>
                   {streaks.current} day{streaks.current !== 1 ? "s" : ""}
                 </span>
-              </span>
+              </Badge>
             )}
-            <Link
-              href="/settings"
-              className="p-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Settings"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="min-w-[44px] min-h-[44px]"
+              render={<Link href="/settings" aria-label="Settings" />}
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-            </Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -122,12 +126,14 @@ export default function DashboardPage() {
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6 pb-24">
         {/* Guest Banner */}
         {isGuest && (
-          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-sm text-amber-700 dark:text-amber-300 flex items-center justify-between">
-            <span>Data stored locally only</span>
-            <Link href="/login" className="font-semibold underline">
-              Sign in to sync
-            </Link>
-          </div>
+          <Alert className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
+            <AlertDescription className="flex items-center justify-between text-amber-700 dark:text-amber-300">
+              <span>Data stored locally only</span>
+              <Link href="/login" className="font-semibold underline">
+                Sign in to sync
+              </Link>
+            </AlertDescription>
+          </Alert>
         )}
 
         {/* Hydration Score */}

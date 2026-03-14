@@ -14,6 +14,18 @@ import {
 import { Profile, UnitPreference } from "@/types";
 import { displayValue, toMl, unitLabel } from "@/lib/units";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -128,8 +140,6 @@ export default function SettingsPage() {
   };
 
   const handleUpgradeFromGuest = async () => {
-    // Save guest data, then trigger Google login
-    // On successful login, the callback will migrate data
     const guestData = getGuestData();
     localStorage.setItem("hydration_guest_migration", JSON.stringify(guestData));
 
@@ -155,12 +165,16 @@ export default function SettingsPage() {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/dashboard" className="text-blue-500 font-medium flex items-center gap-1">
+          <Button
+            variant="link"
+            className="text-blue-500 font-medium p-0"
+            render={<Link href="/dashboard" />}
+          >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back
-          </Link>
+          </Button>
           <h1 className="text-lg font-bold text-gray-900 dark:text-white">Settings</h1>
           <div className="w-16" />
         </div>
@@ -173,77 +187,79 @@ export default function SettingsPage() {
 
           <div className="space-y-3">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label htmlFor="name" className="text-gray-700 dark:text-gray-300 mb-1">
                 Name
-              </label>
-              <input
+              </Label>
+              <Input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="h-12 px-4 rounded-xl"
               />
             </div>
 
             <div>
-              <label htmlFor="weight" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label htmlFor="weight" className="text-gray-700 dark:text-gray-300 mb-1">
                 Weight (kg)
-              </label>
-              <input
+              </Label>
+              <Input
                 id="weight"
                 type="number"
                 value={weightKg}
                 onChange={(e) => setWeightKg(e.target.value)}
-                min="20"
-                max="300"
-                step="0.1"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                min={20}
+                max={300}
+                step={0.1}
+                className="h-12 px-4 rounded-xl"
               />
             </div>
 
             <div>
-              <label htmlFor="goal" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label htmlFor="goal" className="text-gray-700 dark:text-gray-300 mb-1">
                 Daily Goal ({unitLabel(unit)})
-              </label>
+              </Label>
               <div className="flex gap-2">
-                <input
+                <Input
                   id="goal"
                   type="number"
                   value={dailyGoal}
                   onChange={(e) => setDailyGoal(e.target.value)}
-                  min="1"
-                  className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min={1}
+                  className="flex-1 h-12 px-4 rounded-xl"
                 />
-                <button
+                <Button
+                  variant="secondary"
                   onClick={handleRecalculateGoal}
-                  className="px-4 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium transition-colors"
+                  className="h-12 px-4 rounded-xl"
                 >
                   Recalculate
-                </button>
+                </Button>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <Label className="text-gray-700 dark:text-gray-300 mb-1">
                 Display Unit
-              </label>
+              </Label>
               <div className="grid grid-cols-2 gap-3">
                 {(["ml", "oz"] as const).map((u) => (
-                  <button
+                  <Button
                     key={u}
+                    variant={unit === u ? "default" : "secondary"}
                     onClick={() => {
                       const currentGoalMl = toMl(parseInt(dailyGoal) || 0, unit);
                       setUnit(u);
                       setDailyGoal(String(displayValue(currentGoalMl, u)));
                     }}
-                    className={`py-3 rounded-xl font-medium transition-colors ${
+                    className={`h-12 rounded-xl font-medium ${
                       unit === u
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                        ? "bg-blue-500 hover:bg-blue-600 text-white"
+                        : ""
                     }`}
                   >
                     {u === "ml" ? "ml" : "oz"}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -256,64 +272,54 @@ export default function SettingsPage() {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2">
-              <span className="text-gray-700 dark:text-gray-300">Enable Reminders</span>
-              <button
-                onClick={() => setReminderEnabled(!reminderEnabled)}
-                className={`w-12 h-7 rounded-full transition-colors relative ${
-                  reminderEnabled ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
-                }`}
-                role="switch"
-                aria-checked={reminderEnabled}
-              >
-                <span
-                  className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
-                    reminderEnabled ? "translate-x-[22px]" : "translate-x-0.5"
-                  }`}
-                />
-              </button>
+              <Label className="text-gray-700 dark:text-gray-300">Enable Reminders</Label>
+              <Switch
+                checked={reminderEnabled}
+                onCheckedChange={(checked) => setReminderEnabled(checked)}
+              />
             </div>
 
             {reminderEnabled && (
               <>
                 <div>
-                  <label htmlFor="interval" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <Label htmlFor="interval" className="text-gray-700 dark:text-gray-300 mb-1">
                     Reminder Interval
-                  </label>
-                  <select
-                    id="interval"
-                    value={reminderInterval}
-                    onChange={(e) => setReminderInterval(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="1">Every 1 hour</option>
-                    <option value="2">Every 2 hours</option>
-                    <option value="3">Every 3 hours</option>
-                  </select>
+                  </Label>
+                  <Select value={reminderInterval} onValueChange={(val) => { if (val) setReminderInterval(val); }}>
+                    <SelectTrigger className="w-full h-12 px-4 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">Every 1 hour</SelectItem>
+                      <SelectItem value="2">Every 2 hours</SelectItem>
+                      <SelectItem value="3">Every 3 hours</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label htmlFor="start" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <Label htmlFor="start" className="text-gray-700 dark:text-gray-300 mb-1">
                       Active From
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       id="start"
                       type="time"
                       value={activeStart}
                       onChange={(e) => setActiveStart(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-12 px-4 rounded-xl"
                     />
                   </div>
                   <div>
-                    <label htmlFor="end" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    <Label htmlFor="end" className="text-gray-700 dark:text-gray-300 mb-1">
                       Active Until
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       id="end"
                       type="time"
                       value={activeEnd}
                       onChange={(e) => setActiveEnd(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="h-12 px-4 rounded-xl"
                     />
                   </div>
                 </div>
@@ -323,33 +329,35 @@ export default function SettingsPage() {
         </section>
 
         {/* Save */}
-        <button
+        <Button
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold rounded-xl text-lg transition-colors"
+          className="w-full h-14 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white font-semibold rounded-xl text-lg"
         >
           {saving ? "Saving..." : "Save Changes"}
-        </button>
+        </Button>
 
         {/* Account Section */}
-        <section className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+        <section className="space-y-4">
+          <Separator />
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Account</h2>
 
           {isGuest && (
-            <button
+            <Button
               onClick={handleUpgradeFromGuest}
-              className="w-full py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors"
+              className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl"
             >
               Upgrade to Google Account
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button
+            variant="destructive"
             onClick={handleSignOut}
-            className="w-full py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-medium rounded-xl transition-colors"
+            className="w-full h-12 rounded-xl"
           >
             {isGuest ? "Clear Data & Exit" : "Sign Out"}
-          </button>
+          </Button>
         </section>
 
         {/* Bottom nav spacer */}

@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { WaterLog, UnitPreference } from "@/types";
 import { formatAmount, toMl, displayValue, unitLabel } from "@/lib/units";
 import { formatTime } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface LogTimelineProps {
   logs: WaterLog[];
@@ -95,12 +97,13 @@ export function LogTimeline({ logs, unit, onDelete, onEdit }: LogTimelineProps) 
       {pendingDelete && (
         <div className="flex items-center justify-between px-4 py-3 bg-gray-800 dark:bg-gray-700 text-white rounded-xl text-sm" role="status" aria-live="polite">
           <span>Log removed</span>
-          <button
+          <Button
+            variant="link"
             onClick={handleUndoDelete}
-            className="font-semibold text-blue-400 hover:text-blue-300 min-w-[44px] min-h-[44px] flex items-center justify-end transition-colors"
+            className="font-semibold text-blue-400 hover:text-blue-300 min-w-[44px] min-h-[44px] p-0"
           >
             Undo
-          </button>
+          </Button>
         </div>
       )}
 
@@ -131,34 +134,36 @@ export function LogTimeline({ logs, unit, onDelete, onEdit }: LogTimelineProps) 
                     }}
                     className="flex items-center gap-2 flex-wrap"
                   >
-                    <input
+                    <Input
                       type="time"
                       value={editTime}
                       onChange={(e) => setEditTime(e.target.value)}
-                      className="px-2 py-1 border rounded bg-white dark:bg-gray-700 text-sm"
+                      className="h-8 w-auto px-2 text-sm"
                     />
-                    <input
+                    <Input
                       type="number"
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
-                      className="w-20 px-2 py-1 border rounded bg-white dark:bg-gray-700 text-sm"
+                      className="h-8 w-20 px-2 text-sm"
                       autoFocus
-                      min="1"
+                      min={1}
                     />
                     <span className="text-sm text-gray-500">{unitLabel(unit)}</span>
-                    <button
+                    <Button
                       type="submit"
-                      className="text-green-500 hover:text-green-600 text-sm font-medium min-h-[44px] px-2 transition-colors"
+                      variant="link"
+                      className="text-green-500 hover:text-green-600 min-h-[44px] px-2 p-0"
                     >
                       Save
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
+                      variant="link"
                       onClick={() => setEditingId(null)}
-                      className="text-gray-400 hover:text-gray-500 text-sm min-h-[44px] px-2 transition-colors"
+                      className="text-gray-400 hover:text-gray-500 min-h-[44px] px-2 p-0"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </form>
                 ) : (
                   <span className="font-medium text-gray-900 dark:text-white">
@@ -168,24 +173,28 @@ export function LogTimeline({ logs, unit, onDelete, onEdit }: LogTimelineProps) 
               </div>
               {editingId !== log.id && !isPendingDelete && (
                 <div className="flex items-center">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => handleEditStart(log)}
-                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-blue-500 transition-colors"
+                    className="min-w-[44px] min-h-[44px] text-gray-400 hover:text-blue-500"
                     aria-label="Edit log"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => handleDeleteClick(log.id)}
-                    className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors"
+                    className="min-w-[44px] min-h-[44px] text-gray-400 hover:text-red-500"
                     aria-label="Delete log"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
