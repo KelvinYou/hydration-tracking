@@ -90,11 +90,17 @@ export function useHydration() {
       setLogs((prev) => [...prev, tempLog]);
       setAllLogs((prev) => [...prev, tempLog]);
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("water_logs")
         .insert({ user_id: user.id, amount_ml: amountMl })
         .select()
         .single();
+
+      if (error) {
+        setLogs((prev) => prev.filter((l) => l.id !== tempLog.id));
+        setAllLogs((prev) => prev.filter((l) => l.id !== tempLog.id));
+        return;
+      }
 
       if (data) {
         setLogs((prev) => prev.map((l) => (l.id === tempLog.id ? data : l)));

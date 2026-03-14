@@ -7,7 +7,7 @@ export function calculateHydrationScore(
   activeEnd: string = "23:00"
 ): HydrationScore {
   if (dailyGoalMl <= 0) {
-    return { total: 0, volumeScore: 0, distributionScore: 0, label: "Needs improvement", color: "text-red-500" };
+    return { total: 0, volumeScore: 0, distributionScore: 0, label: "Needs improvement", level: "poor" as const };
   }
 
   const totalIntake = logs.reduce((sum, log) => sum + log.amount_ml, 0);
@@ -67,9 +67,9 @@ function parseTimeToHours(time: string): number {
   return h + (m || 0) / 60;
 }
 
-function getScoreLabel(score: number): { label: string; color: string } {
-  if (score >= 80) return { label: "Excellent", color: "text-green-500" };
-  if (score >= 60) return { label: "Good", color: "text-blue-500" };
-  if (score >= 40) return { label: "Fair", color: "text-yellow-500" };
-  return { label: "Needs improvement", color: "text-red-500" };
+function getScoreLabel(score: number): { label: string; level: "excellent" | "good" | "fair" | "poor" } {
+  if (score >= 80) return { label: "Excellent", level: "excellent" };
+  if (score >= 60) return { label: "Good", level: "good" };
+  if (score >= 40) return { label: "Fair", level: "fair" };
+  return { label: "Needs improvement", level: "poor" };
 }

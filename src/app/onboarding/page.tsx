@@ -16,6 +16,7 @@ export default function OnboardingPage() {
   const [weightKg, setWeightKg] = useState("");
   const [unit, setUnit] = useState<UnitPreference>("ml");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const weight = parseFloat(weightKg) || 0;
   const dailyGoalMl = Math.round(weight * 35);
@@ -46,7 +47,7 @@ export default function OnboardingPage() {
       return;
     }
 
-    await supabase.from("profiles").upsert({
+    const { error: upsertError } = await supabase.from("profiles").upsert({
       id: user.id,
       email: user.email!,
       name: name || user.user_metadata?.full_name || "User",
@@ -54,6 +55,12 @@ export default function OnboardingPage() {
       daily_goal_ml: dailyGoalMl,
       preferred_unit: unit,
     });
+
+    if (upsertError) {
+      setError("Failed to save profile. Please try again.");
+      setSaving(false);
+      return;
+    }
 
     router.push("/dashboard");
   };
@@ -143,6 +150,10 @@ export default function OnboardingPage() {
                 Based on {weight} kg &times; 35 ml/kg
               </p>
             </div>
+          )}
+
+          {error && (
+            <p className="text-sm text-red-500 text-center">{error}</p>
           )}
 
           <button

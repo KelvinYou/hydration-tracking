@@ -33,5 +33,5 @@ export interface HydrationScore {
   volumeScore: number;
   distributionScore: number;
   label: string;
-  color: string;
+  level: "excellent" | "good" | "fair" | "poor";
 }
