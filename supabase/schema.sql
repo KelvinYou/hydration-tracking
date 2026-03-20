@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   reminder_interval_hours integer DEFAULT 2,
   active_hours_start time DEFAULT '07:00',
   active_hours_end time DEFAULT '23:00',
+  quick_add_presets_ml integer[] DEFAULT '{100,250,500}',
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
