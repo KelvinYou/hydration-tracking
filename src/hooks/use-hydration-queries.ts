@@ -12,7 +12,6 @@ import {
   updateProfile as apiUpdateProfile,
 } from "@/lib/api";
 import {
-  isGuestMode,
   getTodayGuestLogs,
   addGuestLog,
   deleteGuestLog,
@@ -22,9 +21,21 @@ import {
 } from "@/lib/guest-storage";
 import { toast } from "sonner";
 
+function getLocalDateKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function getLocalDayBoundary() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+}
+
+const todayLogsPrefix = ["water-logs", "today"] as const;
+
 export const queryKeys = {
   profile: ["profile"] as const,
-  todayLogs: ["water-logs", "today"] as const,
+  todayLogs: (date: string) => ["water-logs", "today", date] as const,
   allLogs: ["water-logs", "all"] as const,
 };
 
@@ -38,9 +49,12 @@ export function useProfile(isGuest: boolean) {
 }
 
 export function useTodayLogs(isGuest: boolean) {
+  const dateKey = getLocalDateKey();
+  const startOfDay = getLocalDayBoundary();
+
   return useQuery<WaterLog[]>({
-    queryKey: queryKeys.todayLogs,
-    queryFn: isGuest ? () => getTodayGuestLogs() : fetchTodayLogs,
+    queryKey: queryKeys.todayLogs(dateKey),
+    queryFn: isGuest ? () => getTodayGuestLogs() : () => fetchTodayLogs(startOfDay),
   });
 }
 
@@ -62,10 +76,11 @@ export function useAddLog(isGuest: boolean) {
       return insertLog(amountMl);
     },
     onMutate: async (amountMl: number) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.todayLogs });
+      await queryClient.cancelQueries({ queryKey: todayLogsPrefix });
       await queryClient.cancelQueries({ queryKey: queryKeys.allLogs });
 
-      const previousTodayLogs = queryClient.getQueryData<WaterLog[]>(queryKeys.todayLogs);
+      const todayKey = queryKeys.todayLogs(getLocalDateKey());
+      const previousTodayLogs = queryClient.getQueryData<WaterLog[]>(todayKey);
       const previousAllLogs = queryClient.getQueryData<WaterLog[]>(queryKeys.allLogs);
 
       const tempLog: WaterLog = {
@@ -76,7 +91,7 @@ export function useAddLog(isGuest: boolean) {
         created_at: new Date().toISOString(),
       };
 
-      queryClient.setQueryData<WaterLog[]>(queryKeys.todayLogs, (old = []) => [
+      queryClient.setQueryData<WaterLog[]>(todayKey, (old = []) => [
         ...old,
         tempLog,
       ]);
@@ -85,18 +100,18 @@ export function useAddLog(isGuest: boolean) {
         tempLog,
       ]);
 
-      return { previousTodayLogs, previousAllLogs, tempLog };
+      return { previousTodayLogs, previousAllLogs, todayKey, tempLog };
     },
     onError: (_err, _amountMl, context) => {
       if (context) {
-        queryClient.setQueryData(queryKeys.todayLogs, context.previousTodayLogs);
+        queryClient.setQueryData(context.todayKey, context.previousTodayLogs);
         queryClient.setQueryData(queryKeys.allLogs, context.previousAllLogs);
       }
       toast.error("Failed to log water. Please try again.");
     },
     onSuccess: (data, _amountMl, context) => {
       if (context?.tempLog && data) {
-        queryClient.setQueryData<WaterLog[]>(queryKeys.todayLogs, (old = []) =>
+        queryClient.setQueryData<WaterLog[]>(context.todayKey, (old = []) =>
           old.map((l) => (l.id === context.tempLog.id ? data : l))
         );
         queryClient.setQueryData<WaterLog[]>(queryKeys.allLogs, (old = []) =>
@@ -119,30 +134,31 @@ export function useRemoveLog(isGuest: boolean) {
       return apiDeleteLog(id);
     },
     onMutate: async (id: string) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.todayLogs });
+      await queryClient.cancelQueries({ queryKey: todayLogsPrefix });
       await queryClient.cancelQueries({ queryKey: queryKeys.allLogs });
 
-      const previousTodayLogs = queryClient.getQueryData<WaterLog[]>(queryKeys.todayLogs);
+      const todayKey = queryKeys.todayLogs(getLocalDateKey());
+      const previousTodayLogs = queryClient.getQueryData<WaterLog[]>(todayKey);
       const previousAllLogs = queryClient.getQueryData<WaterLog[]>(queryKeys.allLogs);
 
-      queryClient.setQueryData<WaterLog[]>(queryKeys.todayLogs, (old = []) =>
+      queryClient.setQueryData<WaterLog[]>(todayKey, (old = []) =>
         old.filter((l) => l.id !== id)
       );
       queryClient.setQueryData<WaterLog[]>(queryKeys.allLogs, (old = []) =>
         old.filter((l) => l.id !== id)
       );
 
-      return { previousTodayLogs, previousAllLogs };
+      return { previousTodayLogs, previousAllLogs, todayKey };
     },
     onError: (_err, _id, context) => {
       if (context) {
-        queryClient.setQueryData(queryKeys.todayLogs, context.previousTodayLogs);
+        queryClient.setQueryData(context.todayKey, context.previousTodayLogs);
         queryClient.setQueryData(queryKeys.allLogs, context.previousAllLogs);
       }
       toast.error("Failed to delete log. Please try again.");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.todayLogs });
+      queryClient.invalidateQueries({ queryKey: todayLogsPrefix });
       queryClient.invalidateQueries({ queryKey: queryKeys.allLogs });
     },
   });
@@ -168,10 +184,11 @@ export function useEditLog(isGuest: boolean) {
       return apiUpdateLog(id, amountMl, loggedAt);
     },
     onMutate: async ({ id, amountMl, loggedAt }) => {
-      await queryClient.cancelQueries({ queryKey: queryKeys.todayLogs });
+      await queryClient.cancelQueries({ queryKey: todayLogsPrefix });
       await queryClient.cancelQueries({ queryKey: queryKeys.allLogs });
 
-      const previousTodayLogs = queryClient.getQueryData<WaterLog[]>(queryKeys.todayLogs);
+      const todayKey = queryKeys.todayLogs(getLocalDateKey());
+      const previousTodayLogs = queryClient.getQueryData<WaterLog[]>(todayKey);
       const previousAllLogs = queryClient.getQueryData<WaterLog[]>(queryKeys.allLogs);
 
       const updater = (old: WaterLog[] = []) =>
@@ -181,20 +198,20 @@ export function useEditLog(isGuest: boolean) {
             : l
         );
 
-      queryClient.setQueryData<WaterLog[]>(queryKeys.todayLogs, updater);
+      queryClient.setQueryData<WaterLog[]>(todayKey, updater);
       queryClient.setQueryData<WaterLog[]>(queryKeys.allLogs, updater);
 
-      return { previousTodayLogs, previousAllLogs };
+      return { previousTodayLogs, previousAllLogs, todayKey };
     },
     onError: (_err, _vars, context) => {
       if (context) {
-        queryClient.setQueryData(queryKeys.todayLogs, context.previousTodayLogs);
+        queryClient.setQueryData(context.todayKey, context.previousTodayLogs);
         queryClient.setQueryData(queryKeys.allLogs, context.previousAllLogs);
       }
       toast.error("Failed to update log. Please try again.");
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.todayLogs });
+      queryClient.invalidateQueries({ queryKey: todayLogsPrefix });
       queryClient.invalidateQueries({ queryKey: queryKeys.allLogs });
     },
   });

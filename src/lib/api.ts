@@ -26,17 +26,15 @@ export async function fetchProfile(): Promise<Partial<Profile> | null> {
   return data;
 }
 
-export async function fetchTodayLogs(): Promise<WaterLog[]> {
+export async function fetchTodayLogs(startOfDay: string): Promise<WaterLog[]> {
   const user = await getUser();
   if (!user) return [];
 
-  const now = new Date();
-  const startOfLocalDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const { data } = await getSupabase()
     .from("water_logs")
     .select("*")
     .eq("user_id", user.id)
-    .gte("logged_at", startOfLocalDay)
+    .gte("logged_at", startOfDay)
     .order("logged_at", { ascending: true });
 
   return data ?? [];

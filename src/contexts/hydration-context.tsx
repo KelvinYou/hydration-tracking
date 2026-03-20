@@ -110,7 +110,7 @@ export function HydrationProvider({ children }: { children: ReactNode }) {
 
   const refetch = async () => {
     await queryClient.invalidateQueries({ queryKey: queryKeys.profile });
-    await queryClient.invalidateQueries({ queryKey: queryKeys.todayLogs });
+    await queryClient.invalidateQueries({ queryKey: ["water-logs", "today"] });
     await queryClient.invalidateQueries({ queryKey: queryKeys.allLogs });
   };
 
