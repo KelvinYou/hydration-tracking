@@ -33,7 +33,7 @@ export function QuickAddButtons({ unit, onAdd }: QuickAddButtonsProps) {
           <Button
             key={amount.ml}
             onClick={() => onAdd(amount.ml)}
-            className="h-14 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 active:scale-95 text-white font-semibold rounded-xl text-lg transition-all touch-manipulation"
+            className="h-14 bg-sky-500 hover:bg-sky-600 active:bg-sky-700 active:scale-95 text-white font-semibold rounded-xl text-lg transition-all touch-manipulation shadow-sm hover:shadow-md hover:shadow-sky-500/20"
             aria-label={`Add ${amount.label}`}
           >
             {amount.label}

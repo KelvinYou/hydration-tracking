@@ -11,7 +11,7 @@ interface HydrationScoreDisplayProps {
 const LEVEL_STYLES: Record<HydrationScore["level"], { bg: string; text: string; badge: string; icon: React.ReactNode }> = {
   excellent: {
     bg: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
-    text: "text-green-600 dark:text-green-400",
+    text: "text-green-600 dark:text-green-300",
     badge: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -21,7 +21,7 @@ const LEVEL_STYLES: Record<HydrationScore["level"], { bg: string; text: string; 
   },
   good: {
     bg: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
-    text: "text-blue-600 dark:text-blue-400",
+    text: "text-blue-600 dark:text-blue-300",
     badge: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -31,7 +31,7 @@ const LEVEL_STYLES: Record<HydrationScore["level"], { bg: string; text: string; 
   },
   fair: {
     bg: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800",
-    text: "text-yellow-600 dark:text-yellow-500",
+    text: "text-yellow-600 dark:text-yellow-300",
     badge: "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -41,7 +41,7 @@ const LEVEL_STYLES: Record<HydrationScore["level"], { bg: string; text: string; 
   },
   poor: {
     bg: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
-    text: "text-red-600 dark:text-red-400",
+    text: "text-red-600 dark:text-red-300",
     badge: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300",
     icon: (
       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -55,16 +55,16 @@ export function HydrationScoreDisplay({ score }: HydrationScoreDisplayProps) {
   const styles = LEVEL_STYLES[score.level];
 
   return (
-    <Card className={`ring-0 ${styles.bg}`}>
+    <Card className={`ring-0 transition-colors duration-300 ${styles.bg}`}>
       <CardContent>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
               Hydration Score
             </p>
-            <div className={`flex items-center gap-2 mt-0.5 ${styles.text}`}>
+            <div className={`flex items-center gap-2 mt-0.5 transition-colors duration-300 ${styles.text}`}>
               {styles.icon}
-              <p className="text-4xl font-bold leading-none">{score.total}</p>
+              <p className="text-4xl font-bold leading-none tabular-nums">{score.total}</p>
             </div>
             <Badge className={`mt-1 ${styles.badge} border-0`}>
               {score.label}

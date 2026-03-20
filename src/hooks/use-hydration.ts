@@ -14,6 +14,7 @@ import {
 } from "@/lib/guest-storage";
 import { calculateHydrationScore } from "@/lib/hydration-score";
 import { calculateStreaks } from "@/lib/streaks";
+import { toast } from "sonner";
 
 export function useHydration() {
   const [logs, setLogs] = useState<WaterLog[]>([]);
@@ -99,6 +100,7 @@ export function useHydration() {
       if (error) {
         setLogs((prev) => prev.filter((l) => l.id !== tempLog.id));
         setAllLogs((prev) => prev.filter((l) => l.id !== tempLog.id));
+        toast.error("Failed to log water. Please try again.");
         return;
       }
 

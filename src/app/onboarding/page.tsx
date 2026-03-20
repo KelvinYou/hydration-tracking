@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -20,7 +21,6 @@ export default function OnboardingPage() {
   const [weightKg, setWeightKg] = useState("");
   const [unit, setUnit] = useState<UnitPreference>("ml");
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const weight = parseFloat(weightKg) || 0;
   const dailyGoalMl = Math.round(weight * 35);
@@ -61,7 +61,7 @@ export default function OnboardingPage() {
     });
 
     if (upsertError) {
-      setError("Failed to save profile. Please try again.");
+      toast.error("Failed to save profile. Please try again.");
       setSaving(false);
       return;
     }
@@ -73,7 +73,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-balance">
             Set Up Your Profile
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
@@ -94,11 +94,12 @@ export default function OnboardingPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
               className="h-12 px-4 rounded-xl"
+              autoFocus
             />
           </div>
 
           {/* Weight */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="weight" className="text-gray-700 dark:text-gray-300">
               Weight (kg)
             </Label>
@@ -114,6 +115,9 @@ export default function OnboardingPage() {
               step={0.1}
               className="h-12 px-4 rounded-xl"
             />
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              Used to calculate your daily goal (WHO recommends 2-3L/day)
+            </p>
           </div>
 
           {/* Unit Preference */}
@@ -130,7 +134,7 @@ export default function OnboardingPage() {
                   onClick={() => setUnit(u)}
                   className={`h-12 rounded-xl font-medium ${
                     unit === u
-                      ? "bg-blue-500 hover:bg-blue-600 text-white"
+                      ? "bg-sky-500 hover:bg-sky-600 text-white"
                       : ""
                   }`}
                 >
@@ -159,14 +163,10 @@ export default function OnboardingPage() {
             </Card>
           )}
 
-          {error && (
-            <p className="text-sm text-red-500 text-center">{error}</p>
-          )}
-
           <Button
             type="submit"
             disabled={!weight || weight <= 0 || saving}
-            className="w-full h-14 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white font-semibold rounded-xl text-lg"
+            className="w-full h-14 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white font-semibold rounded-xl text-lg"
           >
             {saving ? "Saving..." : "Start Tracking"}
           </Button>

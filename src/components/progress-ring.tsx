@@ -18,6 +18,7 @@ export function ProgressRing({
   sublabel,
 }: ProgressRingProps) {
   const [animatedProgress, setAnimatedProgress] = useState(0);
+  const [celebrate, setCelebrate] = useState(false);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const offset = circumference - (animatedProgress / 100) * circumference;
@@ -27,15 +28,32 @@ export function ProgressRing({
     return () => clearTimeout(timer);
   }, [progress]);
 
+  // Trigger celebration pulse when reaching 100%
+  useEffect(() => {
+    if (progress >= 100 && animatedProgress >= 100) {
+      setCelebrate(true);
+      const timer = setTimeout(() => setCelebrate(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [progress, animatedProgress]);
+
   const getColor = () => {
     if (progress >= 100) return "#22c55e";
-    if (progress >= 60) return "#3b82f6";
+    if (progress >= 60) return "#0284c7";
     if (progress >= 30) return "#eab308";
     return "#ef4444";
   };
 
   return (
-    <div className="relative inline-flex items-center justify-center">
+    <div
+      className={`relative inline-flex items-center justify-center transition-transform duration-300 ${
+        celebrate ? "scale-105" : "scale-100"
+      }`}
+    >
+      {/* Glow effect when goal reached */}
+      {progress >= 100 && (
+        <div className="absolute inset-0 rounded-full bg-green-400/20 dark:bg-green-400/10 blur-xl" />
+      )}
       <svg width={size} height={size} className="-rotate-90">
         <circle
           cx={size / 2}
@@ -60,7 +78,7 @@ export function ProgressRing({
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+        <span className="text-2xl font-bold text-gray-900 dark:text-white tabular-nums">
           {label}
         </span>
         <span className="text-sm text-gray-500 dark:text-gray-400">
