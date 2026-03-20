@@ -1,6 +1,30 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { LandingNavbar } from "@/components/landing-navbar";
+import { siteConfig } from "@/lib/site-config";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: siteConfig.name,
+  url: siteConfig.url,
+  description: siteConfig.description,
+  applicationCategory: "HealthApplication",
+  operatingSystem: "Any",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+  featureList: [
+    "One-tap water logging",
+    "Personalized Hydration Score (0-100)",
+    "Daily streak tracking",
+    "Smart hydration reminders",
+    "Offline support",
+    "Privacy-first design",
+  ],
+};
 
 const FEATURES = [
   {
@@ -71,6 +95,10 @@ const STEPS = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <LandingNavbar />
 
       {/* Hero */}
