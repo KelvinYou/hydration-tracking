@@ -5,9 +5,10 @@ import { HydrationScore } from "@/types";
 import { useHydrationContext } from "@/contexts/hydration-context";
 import { formatAmount } from "@/lib/units";
 import { calculateHydrationScore } from "@/lib/hydration-score";
-import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+
 import { Progress } from "@/components/ui/progress";
+import { LogTimeline } from "@/components/log-timeline";
 
 const SCORE_TEXT: Record<HydrationScore["level"], string> = {
   excellent: "text-green-600 dark:text-green-300",
@@ -17,13 +18,14 @@ const SCORE_TEXT: Record<HydrationScore["level"], string> = {
 };
 
 export default function HistoryPage() {
-  const { allLogs, profile, loading, unit, dailyGoalMl } = useHydrationContext();
+  const { allLogs, profile, loading, unit, dailyGoalMl, editLog, removeLog, addLog } = useHydrationContext();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const dailyData = useMemo(() => {
     const grouped = new Map<string, typeof allLogs>();
     for (const log of allLogs) {
-      const date = new Date(log.logged_at).toISOString().split("T")[0];
+      const d = new Date(log.logged_at);
+      const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
       if (!grouped.has(date)) grouped.set(date, []);
       grouped.get(date)!.push(log);
     }
@@ -142,23 +144,13 @@ export default function HistoryPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  {selectedDay.logs
-                    .sort((a, b) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime())
-                    .map((log) => (
-                      <div
-                        key={log.id}
-                        className="flex items-center justify-between py-3 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
-                      >
-                        <span className="text-sm text-gray-500 w-20">
-                          {formatTime(log.logged_at)}
-                        </span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          +{formatAmount(log.amount_ml, unit)}
-                        </span>
-                      </div>
-                    ))}
-                </div>
+                <LogTimeline
+                  logs={selectedDay.logs}
+                  unit={unit}
+                  onDelete={removeLog}
+                  onEdit={editLog}
+                  onAdd={addLog}
+                />
               </div>
             ) : (
               <div className="space-y-2">

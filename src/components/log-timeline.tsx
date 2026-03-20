@@ -13,9 +13,10 @@ interface LogTimelineProps {
   unit: UnitPreference;
   onDelete: (id: string) => void;
   onEdit: (id: string, amountMl: number, loggedAt?: string) => void;
+  onAdd: (amountMl: number) => void;
 }
 
-export function LogTimeline({ logs, unit, onDelete, onEdit }: LogTimelineProps) {
+export function LogTimeline({ logs, unit, onDelete, onEdit, onAdd }: LogTimelineProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [editTime, setEditTime] = useState("");
@@ -36,20 +37,30 @@ export function LogTimeline({ logs, unit, onDelete, onEdit }: LogTimelineProps) 
     if (value > 0) {
       const original = new Date(log.logged_at);
       const [hours, minutes] = editTime.split(":").map(Number);
-      original.setHours(hours, minutes, 0, 0);
-      onEdit(log.id, toMl(value, unit), original.toISOString());
+      // Build a new date using the local date of the original log + edited time
+      const updated = new Date(
+        original.getFullYear(),
+        original.getMonth(),
+        original.getDate(),
+        hours,
+        minutes,
+        0,
+        0
+      );
+      onEdit(log.id, toMl(value, unit), updated.toISOString());
       toast.success("Log updated");
     }
     setEditingId(null);
   };
 
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (log: WaterLog) => {
+    const { id, amount_ml } = log;
     onDelete(id);
     toast("Log removed", {
       action: {
         label: "Undo",
         onClick: () => {
-          // Note: undo not possible after server delete — this is a UX hint only
+          onAdd(amount_ml);
         },
       },
     });
@@ -151,7 +162,7 @@ export function LogTimeline({ logs, unit, onDelete, onEdit }: LogTimelineProps) 
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDeleteClick(log.id)}
+                  onClick={() => handleDeleteClick(log)}
                   className="min-w-[44px] min-h-[44px] text-gray-400 hover:text-red-500"
                   aria-label="Delete log"
                 >

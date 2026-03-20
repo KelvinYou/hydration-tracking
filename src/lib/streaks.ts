@@ -10,10 +10,10 @@ export function calculateStreaks(logs: WaterLog[], dailyGoalMl: number): StreakR
     return { current: 0, longest: 0 };
   }
 
-  // Group logs by date
+  // Group logs by local date
   const dailyTotals = new Map<string, number>();
   for (const log of logs) {
-    const date = new Date(log.logged_at).toISOString().split("T")[0];
+    const date = toLocalDateStr(new Date(log.logged_at));
     dailyTotals.set(date, (dailyTotals.get(date) || 0) + log.amount_ml);
   }
 
@@ -23,8 +23,9 @@ export function calculateStreaks(logs: WaterLog[], dailyGoalMl: number): StreakR
   if (dates.length === 0) return { current: 0, longest: 0 };
 
   // Calculate current streak (must start from today or yesterday)
-  const today = new Date().toISOString().split("T")[0];
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  const now = new Date();
+  const today = toLocalDateStr(now);
+  const yesterday = toLocalDateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1));
 
   let current = 0;
   let longest = 0;
@@ -64,10 +65,11 @@ export function calculateStreaks(logs: WaterLog[], dailyGoalMl: number): StreakR
 
   if (startDate) {
     current = 1;
-    let checkDate = new Date(startDate);
+    const [y, m, d] = startDate.split("-").map(Number);
+    let checkDate = new Date(y, m - 1, d);
     while (true) {
-      checkDate = new Date(checkDate.getTime() - 86400000);
-      const dateStr = checkDate.toISOString().split("T")[0];
+      checkDate = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate() - 1);
+      const dateStr = toLocalDateStr(checkDate);
       const total = dailyTotals.get(dateStr) || 0;
       if (total >= dailyGoalMl) {
         current++;
@@ -78,6 +80,10 @@ export function calculateStreaks(logs: WaterLog[], dailyGoalMl: number): StreakR
   }
 
   return { current, longest };
+}
+
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function daysDiff(dateA: string, dateB: string): number {
