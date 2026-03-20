@@ -9,6 +9,7 @@ export interface Profile {
   reminder_interval_hours: number;
   active_hours_start: string;
   active_hours_end: string;
+  quick_add_presets_ml: number[];
   created_at: string;
   updated_at: string;
 }

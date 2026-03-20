@@ -8,13 +8,14 @@ import { Input } from "@/components/ui/input";
 
 interface QuickAddButtonsProps {
   unit: UnitPreference;
+  presetsMl?: number[];
   onAdd: (amountMl: number) => void;
 }
 
-export function QuickAddButtons({ unit, onAdd }: QuickAddButtonsProps) {
+export function QuickAddButtons({ unit, presetsMl, onAdd }: QuickAddButtonsProps) {
   const [showCustom, setShowCustom] = useState(false);
   const [customValue, setCustomValue] = useState("");
-  const amounts = getQuickAddAmounts(unit);
+  const amounts = getQuickAddAmounts(unit, presetsMl);
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();

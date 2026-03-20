@@ -178,13 +178,14 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <QuickAddButtons unit={unit} onAdd={handleAddLog} />
+            <QuickAddButtons unit={unit} presetsMl={profile?.quick_add_presets_ml} onAdd={handleAddLog} />
 
             <LogTimeline
               logs={logs}
               unit={unit}
               onDelete={removeLog}
               onEdit={editLog}
+              onAdd={addLog}
             />
           </div>
 

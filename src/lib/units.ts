@@ -17,19 +17,18 @@ export function formatAmount(ml: number, unit: UnitPreference): string {
   return `${ml.toLocaleString()} ml`;
 }
 
-export function getQuickAddAmounts(unit: UnitPreference): { label: string; ml: number }[] {
-  if (unit === "oz") {
-    return [
-      { label: "+4 oz", ml: ozToMl(4) },
-      { label: "+8 oz", ml: ozToMl(8) },
-      { label: "+16 oz", ml: ozToMl(16) },
-    ];
-  }
-  return [
-    { label: "+100 ml", ml: 100 },
-    { label: "+250 ml", ml: 250 },
-    { label: "+500 ml", ml: 500 },
-  ];
+export const DEFAULT_PRESETS_ML = [100, 250, 500];
+export const DEFAULT_PRESETS_OZ = [4, 8, 16];
+
+export function getQuickAddAmounts(
+  unit: UnitPreference,
+  presetsMl?: number[]
+): { label: string; ml: number }[] {
+  const presets = presetsMl && presetsMl.length > 0 ? presetsMl : DEFAULT_PRESETS_ML;
+  return presets.map((ml) => ({
+    label: unit === "oz" ? `+${mlToOz(ml)} oz` : `+${ml} ml`,
+    ml,
+  }));
 }
 
 export function displayValue(ml: number, unit: UnitPreference): number {

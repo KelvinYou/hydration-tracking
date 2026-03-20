@@ -12,6 +12,7 @@ const defaultProfile: GuestData["profile"] = {
   reminder_interval_hours: 2,
   active_hours_start: "07:00",
   active_hours_end: "23:00",
+  quick_add_presets_ml: [100, 250, 500],
 };
 
 export function getGuestData(): GuestData {
@@ -24,7 +25,9 @@ export function getGuestData(): GuestData {
     localStorage.setItem(GUEST_KEY, JSON.stringify(data));
     return data;
   }
-  return JSON.parse(stored);
+  const parsed: GuestData = JSON.parse(stored);
+  parsed.profile = { ...defaultProfile, ...parsed.profile };
+  return parsed;
 }
 
 export function setGuestData(data: GuestData): void {
@@ -47,10 +50,13 @@ export function getGuestLogs(): WaterLog[] {
 }
 
 export function getTodayGuestLogs(): WaterLog[] {
-  const today = new Date().toISOString().split("T")[0];
-  return getGuestLogs().filter(
-    (log) => new Date(log.logged_at).toISOString().split("T")[0] === today
-  );
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const endOfDay = startOfDay + 24 * 60 * 60 * 1000;
+  return getGuestLogs().filter((log) => {
+    const t = new Date(log.logged_at).getTime();
+    return t >= startOfDay && t < endOfDay;
+  });
 }
 
 export function addGuestLog(amountMl: number): WaterLog {

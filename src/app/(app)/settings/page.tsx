@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useHydrationContext } from "@/contexts/hydration-context";
+import { useUpdateProfile } from "@/hooks/use-hydration-queries";
 import {
-  updateGuestProfile,
   clearGuestData,
   setGuestMode,
   getGuestData,
 } from "@/lib/guest-storage";
 import { UnitPreference } from "@/types";
-import { displayValue, toMl, unitLabel } from "@/lib/units";
+import { displayValue, toMl, unitLabel, DEFAULT_PRESETS_ML } from "@/lib/units";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,8 @@ import { toast } from "sonner";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { profile, loading, isGuest, updateProfile, refetch } = useHydrationContext();
+  const { profile, loading, isGuest } = useHydrationContext();
+  const profileMutation = useUpdateProfile(isGuest);
   const [saving, setSaving] = useState(false);
   const [formInitialized, setFormInitialized] = useState(false);
 
@@ -41,6 +42,9 @@ export default function SettingsPage() {
   const [reminderInterval, setReminderInterval] = useState("2");
   const [activeStart, setActiveStart] = useState("07:00");
   const [activeEnd, setActiveEnd] = useState("23:00");
+  const [presets, setPresets] = useState<string[]>(
+    DEFAULT_PRESETS_ML.map(String)
+  );
 
   // Initialize form from shared profile (only once)
   useEffect(() => {
@@ -55,6 +59,12 @@ export default function SettingsPage() {
       setReminderInterval(String(profile.reminder_interval_hours || 2));
       setActiveStart(profile.active_hours_start || "07:00");
       setActiveEnd(profile.active_hours_end || "23:00");
+      const profilePresets = profile.quick_add_presets_ml;
+      if (profilePresets && profilePresets.length > 0) {
+        setPresets(profilePresets.map((v) => String(displayValue(v, profile.preferred_unit || "ml"))));
+      } else {
+        setPresets(DEFAULT_PRESETS_ML.map((v) => String(displayValue(v, profile.preferred_unit || "ml"))));
+      }
       setFormInitialized(true);
     }
   }, [loading, profile, formInitialized]);
@@ -62,6 +72,10 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     const dailyGoalMl = toMl(parseInt(dailyGoal) || 0, unit);
+
+    const presetsMl = presets
+      .map((v) => toMl(parseInt(v) || 0, unit))
+      .filter((v) => v > 0);
 
     const updates = {
       name,
@@ -72,32 +86,18 @@ export default function SettingsPage() {
       reminder_interval_hours: parseInt(reminderInterval) || 2,
       active_hours_start: activeStart,
       active_hours_end: activeEnd,
+      quick_add_presets_ml: presetsMl.length > 0 ? presetsMl : DEFAULT_PRESETS_ML,
     };
 
-    if (isGuest) {
-      updateGuestProfile(updates);
-      updateProfile(updates);
-      setSaving(false);
+    try {
+      await profileMutation.mutateAsync(updates);
       toast.success("Settings saved");
       router.push("/dashboard");
-      return;
+    } catch {
+      // Error toast handled by mutation's onError
+    } finally {
+      setSaving(false);
     }
-
-    const { createClient } = await import("@/lib/supabase-client");
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
-      if (error) {
-        toast.error("Failed to save settings");
-        setSaving(false);
-        return;
-      }
-    }
-    updateProfile(updates);
-    setSaving(false);
-    toast.success("Settings saved");
-    router.push("/dashboard");
   };
 
   const handleRecalculateGoal = () => {
@@ -225,6 +225,12 @@ export default function SettingsPage() {
                         const currentGoalMl = toMl(parseInt(dailyGoal) || 0, unit);
                         setUnit(u);
                         setDailyGoal(String(displayValue(currentGoalMl, u)));
+                        setPresets((prev) =>
+                          prev.map((v) => {
+                            const ml = toMl(parseInt(v) || 0, unit);
+                            return String(displayValue(ml, u));
+                          })
+                        );
                       }}
                       className={`h-12 rounded-xl font-medium ${
                         unit === u
@@ -237,6 +243,55 @@ export default function SettingsPage() {
                   ))}
                 </div>
               </div>
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Quick Add Presets</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Customize the quick-add button amounts on the dashboard.
+            </p>
+            <div className="space-y-3">
+              {presets.map((value, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Label htmlFor={`preset-${index}`} className="text-gray-700 dark:text-gray-300 w-20 shrink-0">
+                    Button {index + 1}
+                  </Label>
+                  <Input
+                    id={`preset-${index}`}
+                    type="number"
+                    value={value}
+                    onChange={(e) => {
+                      const next = [...presets];
+                      next[index] = e.target.value;
+                      setPresets(next);
+                    }}
+                    min={1}
+                    className="h-12 px-4 rounded-xl flex-1"
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400 w-8">
+                    {unitLabel(unit)}
+                  </span>
+                </div>
+              ))}
+              {presets.length < 6 && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setPresets([...presets, ""])}
+                  className="h-10 rounded-xl text-sm"
+                >
+                  + Add Preset
+                </Button>
+              )}
+              {presets.length > 1 && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setPresets(presets.slice(0, -1))}
+                  className="h-10 rounded-xl text-sm ml-2"
+                >
+                  Remove Last
+                </Button>
+              )}
             </div>
           </section>
 
