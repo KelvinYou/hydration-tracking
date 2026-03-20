@@ -5,22 +5,23 @@ import {
   useContext,
   useState,
   useEffect,
-  useCallback,
-  useRef,
+  useMemo,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { WaterLog, Profile, HydrationScore } from "@/types";
-import {
-  isGuestMode,
-  getTodayGuestLogs,
-  addGuestLog,
-  deleteGuestLog,
-  updateGuestLog,
-  getGuestProfile,
-  getGuestLogs,
-} from "@/lib/guest-storage";
+import { isGuestMode } from "@/lib/guest-storage";
 import { calculateHydrationScore } from "@/lib/hydration-score";
 import { calculateStreaks } from "@/lib/streaks";
+import {
+  useProfile,
+  useTodayLogs,
+  useAllLogs,
+  useAddLog,
+  useRemoveLog,
+  useEditLog,
+  queryKeys,
+} from "@/hooks/use-hydration-queries";
 
 interface HydrationContextValue {
   logs: WaterLog[];
@@ -52,178 +53,72 @@ export function useHydrationContext() {
 }
 
 export function HydrationProvider({ children }: { children: ReactNode }) {
-  const [logs, setLogs] = useState<WaterLog[]>([]);
-  const [allLogs, setAllLogs] = useState<WaterLog[]>([]);
-  const [profile, setProfile] = useState<Partial<Profile> | null>(null);
-  const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
-  const supabaseRef = useRef<ReturnType<typeof import("@/lib/supabase-client").createClient> | null>(null);
-
-  const getSupabase = useCallback(async () => {
-    if (!supabaseRef.current) {
-      const { createClient } = await import("@/lib/supabase-client");
-      supabaseRef.current = createClient();
-    }
-    return supabaseRef.current;
-  }, []);
-
-  const fetchData = useCallback(async () => {
-    const guest = isGuestMode();
-    setIsGuest(guest);
-
-    if (guest) {
-      setProfile(getGuestProfile() as Partial<Profile>);
-      setLogs(getTodayGuestLogs());
-      setAllLogs(getGuestLogs());
-      setLoading(false);
-      return;
-    }
-
-    const supabase = await getSupabase();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    const [profileRes, todayLogsRes, allLogsRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", user.id).single(),
-      supabase
-        .from("water_logs")
-        .select("*")
-        .eq("user_id", user.id)
-        .gte("logged_at", new Date().toISOString().split("T")[0])
-        .order("logged_at", { ascending: true }),
-      supabase
-        .from("water_logs")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("logged_at", { ascending: true }),
-    ]);
-
-    if (profileRes.data) setProfile(profileRes.data);
-    if (todayLogsRes.data) setLogs(todayLogsRes.data);
-    if (allLogsRes.data) setAllLogs(allLogsRes.data);
-    setLoading(false);
-  }, [getSupabase]);
+  const [guestChecked, setGuestChecked] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const addLog = useCallback(
-    async (amountMl: number) => {
-      if (isGuest) {
-        const log = addGuestLog(amountMl);
-        setLogs((prev) => [...prev, log]);
-        setAllLogs((prev) => [...prev, log]);
-        return;
-      }
-
-      const supabase = await getSupabase();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const tempLog: WaterLog = {
-        id: crypto.randomUUID?.() || Date.now().toString(),
-        user_id: user.id,
-        amount_ml: amountMl,
-        logged_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      };
-      setLogs((prev) => [...prev, tempLog]);
-      setAllLogs((prev) => [...prev, tempLog]);
-
-      const { data, error } = await supabase
-        .from("water_logs")
-        .insert({ user_id: user.id, amount_ml: amountMl })
-        .select()
-        .single();
-
-      if (error) {
-        setLogs((prev) => prev.filter((l) => l.id !== tempLog.id));
-        setAllLogs((prev) => prev.filter((l) => l.id !== tempLog.id));
-        const { toast } = await import("sonner");
-        toast.error("Failed to log water. Please try again.");
-        return;
-      }
-
-      if (data) {
-        setLogs((prev) => prev.map((l) => (l.id === tempLog.id ? data : l)));
-        setAllLogs((prev) => prev.map((l) => (l.id === tempLog.id ? data : l)));
-      }
-    },
-    [isGuest, getSupabase]
-  );
-
-  const removeLog = useCallback(
-    async (id: string) => {
-      setLogs((prev) => prev.filter((l) => l.id !== id));
-      setAllLogs((prev) => prev.filter((l) => l.id !== id));
-
-      if (isGuest) {
-        deleteGuestLog(id);
-        return;
-      }
-
-      const supabase = await getSupabase();
-      await supabase.from("water_logs").delete().eq("id", id);
-    },
-    [isGuest, getSupabase]
-  );
-
-  const editLog = useCallback(
-    async (id: string, amountMl: number, loggedAt?: string) => {
-      setLogs((prev) =>
-        prev.map((l) =>
-          l.id === id
-            ? { ...l, amount_ml: amountMl, ...(loggedAt ? { logged_at: loggedAt } : {}) }
-            : l
-        )
-      );
-      setAllLogs((prev) =>
-        prev.map((l) =>
-          l.id === id
-            ? { ...l, amount_ml: amountMl, ...(loggedAt ? { logged_at: loggedAt } : {}) }
-            : l
-        )
-      );
-
-      if (isGuest) {
-        updateGuestLog(id, amountMl, loggedAt);
-        return;
-      }
-
-      const supabase = await getSupabase();
-      await supabase
-        .from("water_logs")
-        .update({ amount_ml: amountMl, ...(loggedAt ? { logged_at: loggedAt } : {}) })
-        .eq("id", id);
-    },
-    [isGuest, getSupabase]
-  );
-
-  const updateProfile = useCallback((updates: Partial<Profile>) => {
-    setProfile((prev) => (prev ? { ...prev, ...updates } : updates));
+    setIsGuest(isGuestMode());
+    setGuestChecked(true);
   }, []);
+
+  const profileQuery = useProfile(isGuest);
+  const todayLogsQuery = useTodayLogs(isGuest);
+  const allLogsQuery = useAllLogs(isGuest);
+  const addLogMutation = useAddLog(isGuest);
+  const removeLogMutation = useRemoveLog(isGuest);
+  const editLogMutation = useEditLog(isGuest);
+
+  const logs = todayLogsQuery.data ?? [];
+  const allLogs = allLogsQuery.data ?? [];
+  const profile = profileQuery.data ?? null;
+  const loading =
+    !guestChecked || profileQuery.isLoading || todayLogsQuery.isLoading || allLogsQuery.isLoading;
 
   const totalIntake = logs.reduce((sum, log) => sum + log.amount_ml, 0);
   const dailyGoalMl = profile?.daily_goal_ml || 2450;
   const unit = profile?.preferred_unit || "ml";
   const progress = Math.min((totalIntake / dailyGoalMl) * 100, 100);
 
-  const score = calculateHydrationScore(
-    logs,
-    dailyGoalMl,
-    profile?.active_hours_start || "07:00",
-    profile?.active_hours_end || "23:00"
+  const score = useMemo(
+    () =>
+      calculateHydrationScore(
+        logs,
+        dailyGoalMl,
+        profile?.active_hours_start || "07:00",
+        profile?.active_hours_end || "23:00"
+      ),
+    [logs, dailyGoalMl, profile?.active_hours_start, profile?.active_hours_end]
   );
 
-  const streaks = calculateStreaks(allLogs, dailyGoalMl);
+  const streaks = useMemo(
+    () => calculateStreaks(allLogs, dailyGoalMl),
+    [allLogs, dailyGoalMl]
+  );
+
+  const addLog = async (amountMl: number) => {
+    await addLogMutation.mutateAsync(amountMl);
+  };
+
+  const removeLog = async (id: string) => {
+    await removeLogMutation.mutateAsync(id);
+  };
+
+  const editLog = async (id: string, amountMl: number, loggedAt?: string) => {
+    await editLogMutation.mutateAsync({ id, amountMl, loggedAt });
+  };
+
+  const refetch = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.profile });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.todayLogs });
+    await queryClient.invalidateQueries({ queryKey: queryKeys.allLogs });
+  };
+
+  const updateProfile = (updates: Partial<Profile>) => {
+    queryClient.setQueryData<Partial<Profile> | null>(queryKeys.profile, (old) =>
+      old ? { ...old, ...updates } : updates
+    );
+  };
 
   return (
     <HydrationContext.Provider
@@ -242,7 +137,7 @@ export function HydrationProvider({ children }: { children: ReactNode }) {
         addLog,
         removeLog,
         editLog,
-        refetch: fetchData,
+        refetch,
         updateProfile,
       }}
     >

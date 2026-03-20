@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase-client";
+import { useMutation } from "@tanstack/react-query";
+import { upsertProfile, getUser } from "@/lib/api";
 import {
   isGuestMode,
   updateGuestProfile,
@@ -20,53 +21,52 @@ export default function OnboardingPage() {
   const [name, setName] = useState("");
   const [weightKg, setWeightKg] = useState("");
   const [unit, setUnit] = useState<UnitPreference>("ml");
-  const [saving, setSaving] = useState(false);
 
   const weight = parseFloat(weightKg) || 0;
   const dailyGoalMl = Math.round(weight * 35);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!weight || weight <= 0) return;
-    setSaving(true);
+  const onboardMutation = useMutation({
+    mutationFn: async () => {
+      const guest = isGuestMode();
 
-    const guest = isGuestMode();
+      if (guest) {
+        updateGuestProfile({
+          name: name || "Guest",
+          weight_kg: weight,
+          daily_goal_ml: dailyGoalMl,
+          preferred_unit: unit,
+        });
+        setGuestOnboarded();
+        return;
+      }
 
-    if (guest) {
-      updateGuestProfile({
-        name: name || "Guest",
+      const user = await getUser();
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      await upsertProfile({
+        id: user.id,
+        email: user.email!,
+        name: name || user.user_metadata?.full_name || "User",
         weight_kg: weight,
         daily_goal_ml: dailyGoalMl,
         preferred_unit: unit,
       });
-      setGuestOnboarded();
+    },
+    onSuccess: () => {
       router.push("/dashboard");
-      return;
-    }
-
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const { error: upsertError } = await supabase.from("profiles").upsert({
-      id: user.id,
-      email: user.email!,
-      name: name || user.user_metadata?.full_name || "User",
-      weight_kg: weight,
-      daily_goal_ml: dailyGoalMl,
-      preferred_unit: unit,
-    });
-
-    if (upsertError) {
+    },
+    onError: () => {
       toast.error("Failed to save profile. Please try again.");
-      setSaving(false);
-      return;
-    }
+    },
+  });
 
-    router.push("/dashboard");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!weight || weight <= 0) return;
+    onboardMutation.mutate();
   };
 
   return (
@@ -165,10 +165,10 @@ export default function OnboardingPage() {
 
           <Button
             type="submit"
-            disabled={!weight || weight <= 0 || saving}
+            disabled={!weight || weight <= 0 || onboardMutation.isPending}
             className="w-full h-14 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white font-semibold rounded-xl text-lg"
           >
-            {saving ? "Saving..." : "Start Tracking"}
+            {onboardMutation.isPending ? "Saving..." : "Start Tracking"}
           </Button>
         </form>
       </div>
