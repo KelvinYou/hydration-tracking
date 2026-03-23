@@ -1,10 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { UnitPreference } from "@/types";
 import { getQuickAddAmounts, toMl, unitLabel } from "@/lib/units";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const customAmountSchema = z.object({
+  amount: z.number().min(1, "Amount must be at least 1"),
+});
+
+type CustomAmountFormValues = z.infer<typeof customAmountSchema>;
 
 interface QuickAddButtonsProps {
   unit: UnitPreference;
@@ -14,17 +23,21 @@ interface QuickAddButtonsProps {
 
 export function QuickAddButtons({ unit, presetsMl, onAdd }: QuickAddButtonsProps) {
   const [showCustom, setShowCustom] = useState(false);
-  const [customValue, setCustomValue] = useState("");
   const amounts = getQuickAddAmounts(unit, presetsMl);
 
-  const handleCustomSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const value = parseInt(customValue);
-    if (value > 0) {
-      onAdd(toMl(value, unit));
-      setCustomValue("");
-      setShowCustom(false);
-    }
+  const {
+    register,
+    handleSubmit,
+    reset,
+  } = useForm<CustomAmountFormValues>({
+    resolver: zodResolver(customAmountSchema),
+    defaultValues: { amount: undefined as unknown as number },
+  });
+
+  const onSubmit = (data: CustomAmountFormValues) => {
+    onAdd(toMl(data.amount, unit));
+    reset();
+    setShowCustom(false);
   };
 
   return (
@@ -43,11 +56,10 @@ export function QuickAddButtons({ unit, presetsMl, onAdd }: QuickAddButtonsProps
       </div>
 
       {showCustom ? (
-        <form onSubmit={handleCustomSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex gap-2">
           <Input
             type="number"
-            value={customValue}
-            onChange={(e) => setCustomValue(e.target.value)}
+            {...register("amount", { valueAsNumber: true })}
             placeholder={`Amount in ${unitLabel(unit)}`}
             className="flex-1 h-12 px-4 rounded-xl text-lg"
             autoFocus
@@ -63,7 +75,7 @@ export function QuickAddButtons({ unit, presetsMl, onAdd }: QuickAddButtonsProps
           <Button
             type="button"
             variant="secondary"
-            onClick={() => setShowCustom(false)}
+            onClick={() => { setShowCustom(false); reset(); }}
             className="h-12 px-4 rounded-xl"
           >
             Cancel

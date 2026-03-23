@@ -1,12 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { WaterLog, UnitPreference } from "@/types";
 import { formatAmount, toMl, displayValue, unitLabel } from "@/lib/units";
 import { formatTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+
+const editLogSchema = z.object({
+  editValue: z.number().min(1, "Amount must be at least 1"),
+  editTime: z.string().regex(/^\d{2}:\d{2}$/, "Invalid time format"),
+});
+
+type EditLogFormValues = z.infer<typeof editLogSchema>;
 
 interface LogTimelineProps {
   logs: WaterLog[];
@@ -18,8 +28,14 @@ interface LogTimelineProps {
 
 export function LogTimeline({ logs, unit, onDelete, onEdit, onAdd }: LogTimelineProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState("");
-  const [editTime, setEditTime] = useState("");
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+  } = useForm<EditLogFormValues>({
+    resolver: zodResolver(editLogSchema),
+  });
 
   const sortedLogs = [...logs].sort(
     (a, b) => new Date(b.logged_at).getTime() - new Date(a.logged_at).getTime()
@@ -27,29 +43,27 @@ export function LogTimeline({ logs, unit, onDelete, onEdit, onAdd }: LogTimeline
 
   const handleEditStart = (log: WaterLog) => {
     setEditingId(log.id);
-    setEditValue(String(displayValue(log.amount_ml, unit)));
     const d = new Date(log.logged_at);
-    setEditTime(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+    reset({
+      editValue: displayValue(log.amount_ml, unit),
+      editTime: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
+    });
   };
 
-  const handleEditSave = (log: WaterLog) => {
-    const value = parseInt(editValue);
-    if (value > 0) {
-      const original = new Date(log.logged_at);
-      const [hours, minutes] = editTime.split(":").map(Number);
-      // Build a new date using the local date of the original log + edited time
-      const updated = new Date(
-        original.getFullYear(),
-        original.getMonth(),
-        original.getDate(),
-        hours,
-        minutes,
-        0,
-        0
-      );
-      onEdit(log.id, toMl(value, unit), updated.toISOString());
-      toast.success("Log updated");
-    }
+  const handleEditSave = (log: WaterLog) => (data: EditLogFormValues) => {
+    const original = new Date(log.logged_at);
+    const [hours, minutes] = data.editTime.split(":").map(Number);
+    const updated = new Date(
+      original.getFullYear(),
+      original.getMonth(),
+      original.getDate(),
+      hours,
+      minutes,
+      0,
+      0
+    );
+    onEdit(log.id, toMl(data.editValue, unit), updated.toISOString());
+    toast.success("Log updated");
     setEditingId(null);
   };
 
@@ -103,22 +117,17 @@ export function LogTimeline({ logs, unit, onDelete, onEdit, onAdd }: LogTimeline
               </span>
               {editingId === log.id ? (
                 <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleEditSave(log);
-                  }}
+                  onSubmit={handleSubmit(handleEditSave(log))}
                   className="flex items-center gap-2 flex-wrap"
                 >
                   <Input
                     type="time"
-                    value={editTime}
-                    onChange={(e) => setEditTime(e.target.value)}
+                    {...register("editTime")}
                     className="h-8 w-auto px-2 text-sm"
                   />
                   <Input
                     type="number"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
+                    {...register("editValue", { valueAsNumber: true })}
                     className="h-8 w-20 px-2 text-sm"
                     autoFocus
                     min={1}

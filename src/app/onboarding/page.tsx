@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { upsertProfile, getUser } from "@/lib/api";
 import {
   isGuestMode,
@@ -16,25 +18,46 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
+const onboardingSchema = z.object({
+  name: z.string(),
+  weightKg: z.number().min(20, "Weight must be at least 20 kg").max(300, "Weight must be at most 300 kg"),
+  unit: z.enum(["ml", "oz"]),
+});
+
+type OnboardingFormValues = z.infer<typeof onboardingSchema>;
+
 export default function OnboardingPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [weightKg, setWeightKg] = useState("");
-  const [unit, setUnit] = useState<UnitPreference>("ml");
 
-  const weight = parseFloat(weightKg) || 0;
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<OnboardingFormValues>({
+    resolver: zodResolver(onboardingSchema),
+    defaultValues: {
+      name: "",
+      weightKg: 0,
+      unit: "ml" as const,
+    },
+  });
+
+  const weight = watch("weightKg") || 0;
+  const unit = watch("unit");
   const dailyGoalMl = Math.round(weight * 35);
 
   const onboardMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: OnboardingFormValues) => {
       const guest = isGuestMode();
 
       if (guest) {
         updateGuestProfile({
-          name: name || "Guest",
-          weight_kg: weight,
-          daily_goal_ml: dailyGoalMl,
-          preferred_unit: unit,
+          name: data.name || "Guest",
+          weight_kg: data.weightKg,
+          daily_goal_ml: Math.round(data.weightKg * 35),
+          preferred_unit: data.unit,
         });
         setGuestOnboarded();
         return;
@@ -49,10 +72,10 @@ export default function OnboardingPage() {
       await upsertProfile({
         id: user.id,
         email: user.email!,
-        name: name || user.user_metadata?.full_name || "User",
-        weight_kg: weight,
-        daily_goal_ml: dailyGoalMl,
-        preferred_unit: unit,
+        name: data.name || user.user_metadata?.full_name || "User",
+        weight_kg: data.weightKg,
+        daily_goal_ml: Math.round(data.weightKg * 35),
+        preferred_unit: data.unit,
       });
     },
     onSuccess: () => {
@@ -63,10 +86,8 @@ export default function OnboardingPage() {
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!weight || weight <= 0) return;
-    onboardMutation.mutate();
+  const onSubmit = (data: OnboardingFormValues) => {
+    onboardMutation.mutate(data);
   };
 
   return (
@@ -81,7 +102,7 @@ export default function OnboardingPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
@@ -90,8 +111,7 @@ export default function OnboardingPage() {
             <Input
               id="name"
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              {...register("name")}
               placeholder="Your name"
               className="h-12 px-4 rounded-xl"
               autoFocus
@@ -100,21 +120,22 @@ export default function OnboardingPage() {
 
           {/* Weight */}
           <div className="space-y-1.5">
-            <Label htmlFor="weight" className="text-gray-700 dark:text-gray-300">
+            <Label htmlFor="weightKg" className="text-gray-700 dark:text-gray-300">
               Weight (kg)
             </Label>
             <Input
-              id="weight"
+              id="weightKg"
               type="number"
-              value={weightKg}
-              onChange={(e) => setWeightKg(e.target.value)}
+              {...register("weightKg", { valueAsNumber: true })}
               placeholder="e.g., 70"
-              required
               min={20}
               max={300}
               step={0.1}
               className="h-12 px-4 rounded-xl"
             />
+            {errors.weightKg && (
+              <p className="text-xs text-red-500">{errors.weightKg.message}</p>
+            )}
             <p className="text-xs text-gray-400 dark:text-gray-500">
               Used to calculate your daily goal (WHO recommends 2-3L/day)
             </p>
@@ -131,7 +152,7 @@ export default function OnboardingPage() {
                   key={u}
                   type="button"
                   variant={unit === u ? "default" : "secondary"}
-                  onClick={() => setUnit(u)}
+                  onClick={() => setValue("unit", u)}
                   className={`h-12 rounded-xl font-medium ${
                     unit === u
                       ? "bg-sky-500 hover:bg-sky-600 text-white"
