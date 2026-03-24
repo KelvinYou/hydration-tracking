@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 interface ProgressRingProps {
   progress: number;
+  expectedProgress?: number;
   size?: number;
   strokeWidth?: number;
   label: string;
@@ -12,6 +13,7 @@ interface ProgressRingProps {
 
 export function ProgressRing({
   progress,
+  expectedProgress,
   size = 200,
   strokeWidth = 12,
   label,
@@ -38,10 +40,18 @@ export function ProgressRing({
   }, [progress, animatedProgress]);
 
   const getColor = () => {
-    if (progress >= 100) return "#22c55e";
-    if (progress >= 60) return "#0284c7";
-    if (progress >= 30) return "#eab308";
-    return "#ef4444";
+    if (progress >= 100) return "#22c55e"; // green — goal reached
+    if (expectedProgress == null || expectedProgress <= 0) {
+      // Before active hours or no expected progress — use simple thresholds
+      if (progress >= 60) return "#0284c7";
+      if (progress >= 30) return "#eab308";
+      return "#ef4444";
+    }
+    // Compare actual vs expected pace
+    const paceRatio = progress / expectedProgress;
+    if (paceRatio >= 0.9) return "#0284c7";  // blue — on track (within 90%)
+    if (paceRatio >= 0.6) return "#eab308";  // yellow — falling behind
+    return "#ef4444";                         // red — significantly behind
   };
 
   return (

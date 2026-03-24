@@ -52,6 +52,37 @@ const LEVEL_STYLES: Record<HydrationScore["level"], { bg: string; text: string; 
 };
 
 export function HydrationScoreDisplay({ score }: HydrationScoreDisplayProps) {
+  const isEmpty = score.total === 0 && score.volumeScore === 0 && score.distributionScore === 0;
+
+  if (isEmpty) {
+    return (
+      <Card className="ring-0 bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-800">
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Hydration Score
+              </p>
+              <div className="flex items-center gap-2 mt-0.5 text-gray-400 dark:text-gray-500">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-4xl font-bold leading-none tabular-nums">—</p>
+              </div>
+              <Badge className="mt-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-0">
+                Log a drink to get started
+              </Badge>
+            </div>
+            <div className="text-right text-xs text-gray-400 dark:text-gray-500 space-y-1">
+              <p>Volume: —</p>
+              <p>Distribution: —</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const styles = LEVEL_STYLES[score.level];
 
   return (

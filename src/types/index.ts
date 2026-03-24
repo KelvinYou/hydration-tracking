@@ -36,3 +36,20 @@ export interface HydrationScore {
   label: string;
   level: "excellent" | "good" | "fair" | "poor";
 }
+
+export interface HydrationSlot {
+  /** Slot index (0-7) */
+  index: number;
+  /** Start hour label, e.g. "7 AM" */
+  label: string;
+  /** Actual intake in ml for this slot */
+  intakeMl: number;
+  /** Expected intake in ml for this slot */
+  expectedMl: number;
+  /** Ratio of intake to expected (capped at 1.0) */
+  ratio: number;
+  /** Whether the current time falls within this slot */
+  isCurrent: boolean;
+  /** Whether the slot is in the past */
+  isPast: boolean;
+}

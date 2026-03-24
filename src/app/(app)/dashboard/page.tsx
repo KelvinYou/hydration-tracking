@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHydrationContext } from "@/contexts/hydration-context";
 import { ProgressRing } from "@/components/progress-ring";
@@ -8,6 +8,8 @@ import { QuickAddButtons } from "@/components/quick-add-buttons";
 import { LogTimeline } from "@/components/log-timeline";
 import { HydrationScoreDisplay } from "@/components/hydration-score-display";
 import { formatAmount } from "@/lib/units";
+import { getExpectedProgress, getHydrationSlots } from "@/lib/hydration-score";
+import { HydrationRhythm } from "@/components/hydration-rhythm";
 import { useReminders } from "@/hooks/use-reminders";
 import Link from "next/link";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -33,6 +35,27 @@ export default function DashboardPage() {
   } = useHydrationContext();
 
   useReminders(profile, totalIntake, dailyGoalMl);
+
+  const activeStart = profile?.active_hours_start || "07:00";
+  const activeEnd = profile?.active_hours_end || "23:00";
+
+  const [expectedProgress, setExpectedProgress] = useState(() =>
+    getExpectedProgress(activeStart, activeEnd)
+  );
+  const [slots, setSlots] = useState(() =>
+    getHydrationSlots(logs, dailyGoalMl, activeStart, activeEnd)
+  );
+
+  // Update expected progress and slots every minute so time-based UI stays current
+  useEffect(() => {
+    const update = () => {
+      setExpectedProgress(getExpectedProgress(activeStart, activeEnd));
+      setSlots(getHydrationSlots(logs, dailyGoalMl, activeStart, activeEnd));
+    };
+    update();
+    const interval = setInterval(update, 60_000);
+    return () => clearInterval(interval);
+  }, [activeStart, activeEnd, logs, dailyGoalMl]);
 
   const goalReachedRef = useRef(false);
   const prevStreakRef = useRef<number | null>(null);
@@ -147,19 +170,19 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 md:px-8 py-6 space-y-6 pb-24 md:pb-8">
+      <main className="max-w-5xl mx-auto px-4 md:px-8 py-6 space-y-6 pb-32 md:pb-8">
         {isGuest && (
-          <Alert className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300">
-            <AlertDescription className="flex items-center justify-between text-amber-700 dark:text-amber-300">
+          <Alert className="bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300">
+            <AlertDescription className="flex items-center justify-between text-sky-700 dark:text-sky-300">
               <span>Data stored locally only</span>
-              <Link href="/login" className="font-semibold underline">
+              <Link href="/login" className="font-semibold underline text-sky-600 dark:text-sky-300 hover:text-sky-700 dark:hover:text-sky-200">
                 Sign in to sync
               </Link>
             </AlertDescription>
           </Alert>
         )}
 
-        <div className="md:grid md:grid-cols-[1fr_340px] md:gap-8">
+        <div className="md:grid md:grid-cols-[1fr_320px] md:gap-10">
           <div className="space-y-6">
             <div className="md:hidden">
               <HydrationScoreDisplay score={score} />
@@ -168,6 +191,7 @@ export default function DashboardPage() {
             <div className="flex flex-col items-center space-y-2">
               <ProgressRing
                 progress={progress}
+                expectedProgress={expectedProgress}
                 label={formatAmount(totalIntake, unit)}
                 sublabel={`of ${formatAmount(dailyGoalMl, unit)}`}
               />
@@ -176,6 +200,10 @@ export default function DashboardPage() {
                   ? `${formatAmount(remaining, unit)} remaining`
                   : "Goal reached!"}
               </p>
+            </div>
+
+            <div className="md:hidden">
+              <HydrationRhythm slots={slots} unit={unit} />
             </div>
 
             <QuickAddButtons unit={unit} presetsMl={profile?.quick_add_presets_ml} onAdd={handleAddLog} />
@@ -220,6 +248,10 @@ export default function DashboardPage() {
                     )}
                   </div>
                 )}
+
+                <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-4">
+                  <HydrationRhythm slots={slots} unit={unit} />
+                </div>
 
                 <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 p-4 space-y-3">
                   <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
