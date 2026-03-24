@@ -83,9 +83,9 @@ export function QuickAddButtons({ unit, presetsMl, onAdd }: QuickAddButtonsProps
         </form>
       ) : (
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => setShowCustom(true)}
-          className="w-full h-12 rounded-xl font-medium"
+          className="w-full h-12 rounded-xl font-medium border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           Custom Amount
         </Button>

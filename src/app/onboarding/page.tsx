@@ -39,12 +39,12 @@ export default function OnboardingPage() {
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
       name: "",
-      weightKg: 0,
+      weightKg: undefined as unknown as number,
       unit: "ml" as const,
     },
   });
 
-  const weight = watch("weightKg") || 0;
+  const weight = watch("weightKg") ?? 0;
   const unit = watch("unit");
   const dailyGoalMl = Math.round(weight * 35);
 
@@ -92,7 +92,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-sm space-y-8">
+      <div className="w-full max-w-md mx-auto space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-balance">
             Set Up Your Profile
@@ -153,7 +153,7 @@ export default function OnboardingPage() {
                   type="button"
                   variant={unit === u ? "default" : "secondary"}
                   onClick={() => setValue("unit", u)}
-                  className={`h-12 rounded-xl font-medium ${
+                  className={`h-12 rounded-xl font-medium transition-colors ${
                     unit === u
                       ? "bg-sky-500 hover:bg-sky-600 text-white"
                       : ""
@@ -187,7 +187,7 @@ export default function OnboardingPage() {
           <Button
             type="submit"
             disabled={!weight || weight <= 0 || onboardMutation.isPending}
-            className="w-full h-14 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white font-semibold rounded-xl text-lg"
+            className="w-full h-14 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:dark:bg-gray-800 disabled:dark:text-gray-500 font-semibold rounded-xl text-lg not-disabled:text-white"
           >
             {onboardMutation.isPending ? "Saving..." : "Start Tracking"}
           </Button>
