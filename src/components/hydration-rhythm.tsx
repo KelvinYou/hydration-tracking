@@ -30,7 +30,6 @@ function getNudgeMessage(slots: HydrationSlot[]): string {
     return "You're on track — keep it up!";
   }
 
-  // Find the next slot that hasn't ended
   const nextSlot = slots.find((s) => !s.isPast && !s.isCurrent);
   if (nextSlot && currentSlot.ratio < 0.5) {
     return `Drink up — aim to hydrate before ${nextSlot.label}`;
@@ -43,62 +42,95 @@ function getNudgeMessage(slots: HydrationSlot[]): string {
   return "Keep sipping steadily through the day";
 }
 
+function getBarGradient(slot: HydrationSlot): string {
+  const isFilled = slot.ratio >= 0.8;
+  const isPartial = slot.ratio > 0 && slot.ratio < 0.8;
+
+  if (isFilled) {
+    return "linear-gradient(to top, oklch(0.58 0.18 145), oklch(0.72 0.20 148))";
+  }
+  if (isPartial) {
+    if (slot.isCurrent) {
+      return "linear-gradient(to top, oklch(0.52 0.17 230), oklch(0.68 0.17 225))";
+    }
+    if (slot.isPast) {
+      return "linear-gradient(to top, oklch(0.52 0.14 230 / 0.55), oklch(0.65 0.14 225 / 0.65))";
+    }
+    return "linear-gradient(to top, oklch(0.52 0.14 230 / 0.40), oklch(0.65 0.14 225 / 0.50))";
+  }
+  if (slot.isPast) {
+    return "linear-gradient(to top, oklch(0.50 0.01 230 / 0.25), oklch(0.60 0.01 230 / 0.35))";
+  }
+  return "linear-gradient(to top, oklch(0.50 0.01 230 / 0.12), oklch(0.60 0.01 230 / 0.18))";
+}
+
 export function HydrationRhythm({ slots, unit }: HydrationRhythmProps) {
   const nudge = useMemo(() => getNudgeMessage(slots), [slots]);
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
         Daily Rhythm
       </h3>
-      <div className="flex items-end gap-1.5 sm:gap-2 h-20" role="img" aria-label="Hydration distribution across 8 time slots">
+      <div
+        className="flex items-end gap-1.5 sm:gap-2 h-20"
+        role="img"
+        aria-label="Hydration distribution across 8 time slots"
+      >
         {slots.map((slot) => (
           <SlotBar key={slot.index} slot={slot} unit={unit} />
         ))}
       </div>
-      <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-        {nudge}
-      </p>
+      <p className="text-xs text-muted-foreground text-center leading-snug">{nudge}</p>
     </div>
   );
 }
 
 function SlotBar({ slot, unit }: { slot: HydrationSlot; unit: UnitPreference }) {
-  const heightPercent = Math.max(slot.ratio * 100, 4); // min 4% so empty slots are visible
-  const isFilled = slot.ratio >= 0.8;
-  const isPartial = slot.ratio > 0 && slot.ratio < 0.8;
+  const heightPercent = Math.max(slot.ratio * 100, 5);
+  const gradient = getBarGradient(slot);
 
   return (
     <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
       <div className="relative w-full h-16 flex items-end">
+        {/* Glow ring for current slot */}
+        {slot.isCurrent && (
+          <div
+            className="absolute inset-x-0 bottom-0 rounded-t-lg pointer-events-none"
+            style={{
+              height: `${heightPercent}%`,
+              background: "oklch(0.62 0.17 228 / 0.20)",
+              filter: "blur(4px)",
+              transform: "scaleX(1.5)",
+            }}
+          />
+        )}
         <div
           className={cn(
-            "w-full rounded-t-md transition-all duration-500 ease-out",
-            slot.isCurrent && "ring-2 ring-sky-400/50 ring-offset-1 ring-offset-background",
-            isFilled && "bg-green-400 dark:bg-green-500",
-            isPartial && !slot.isPast && !slot.isCurrent && "bg-sky-300 dark:bg-sky-600",
-            isPartial && slot.isCurrent && "bg-sky-400 dark:bg-sky-500",
-            isPartial && slot.isPast && "bg-sky-300/70 dark:bg-sky-700",
-            !isPartial && !isFilled && slot.isPast && "bg-gray-200 dark:bg-gray-700",
-            !isPartial && !isFilled && !slot.isPast && "bg-gray-100 dark:bg-gray-800"
+            "w-full rounded-t-lg transition-all duration-500 ease-out relative",
+            slot.isCurrent && "ring-1 ring-sky-400/50 ring-offset-1 ring-offset-background"
           )}
-          style={{ height: `${heightPercent}%` }}
+          style={{
+            height: `${heightPercent}%`,
+            background: gradient,
+          }}
           title={`${slot.label}: ${formatAmount(slot.intakeMl, unit)} / ${formatAmount(slot.expectedMl, unit)}`}
           aria-hidden="true"
         />
+        {/* Pulse dot on current slot */}
         {slot.isCurrent && (
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
         )}
       </div>
       <span
         className={cn(
-          "text-[11px] sm:text-xs leading-tight tabular-nums w-full text-center whitespace-nowrap",
+          "text-[10px] sm:text-[11px] leading-tight tabular-nums w-full text-center whitespace-nowrap",
           slot.isCurrent
-            ? "font-semibold text-sky-600 dark:text-sky-400"
-            : "text-gray-400 dark:text-gray-500"
+            ? "font-semibold text-sky-500 dark:text-sky-400"
+            : "text-muted-foreground/60"
         )}
       >
-        {slot.label.replace(/ (AM|PM)/, (_, p) => p === "AM" ? "A" : "P")}
+        {slot.label.replace(/ (AM|PM)/, (_, p) => (p === "AM" ? "A" : "P"))}
       </span>
     </div>
   );

@@ -15,7 +15,6 @@ import { UnitPreference } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 
 const onboardingSchema = z.object({
@@ -91,107 +90,127 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-md mx-auto space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white text-balance">
-            Set Up Your Profile
+    <div className="min-h-screen flex items-center justify-center px-6 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "radial-gradient(circle, oklch(0.55 0.12 230 / 0.08) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-sky-400/8 dark:bg-sky-500/5 blur-3xl rounded-full" />
+      </div>
+
+      <div className="relative w-full max-w-md mx-auto">
+        {/* Header */}
+        <div className="text-center space-y-2 mb-8">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-linear-to-br from-sky-400 to-blue-600 shadow-lg shadow-sky-500/25 mb-1">
+            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3c-1.2 3.6-5 7-5 11a5 5 0 0010 0c0-4-3.8-7.4-5-11z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black tracking-tight text-foreground">
+            Set up your profile
           </h1>
-          <p className="text-gray-500 dark:text-gray-400">
-            We&apos;ll calculate your daily hydration goal
+          <p className="text-sm text-muted-foreground">
+            We&apos;ll calculate your perfect daily hydration goal.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
-              Name
-            </Label>
-            <Input
-              id="name"
-              type="text"
-              {...register("name")}
-              placeholder="Your name"
-              className="h-12 px-4 rounded-xl"
-              autoFocus
-            />
-          </div>
-
-          {/* Weight */}
-          <div className="space-y-1.5">
-            <Label htmlFor="weightKg" className="text-gray-700 dark:text-gray-300">
-              Weight (kg)
-            </Label>
-            <Input
-              id="weightKg"
-              type="number"
-              {...register("weightKg", { valueAsNumber: true })}
-              placeholder="e.g., 70"
-              min={20}
-              max={300}
-              step={0.1}
-              className="h-12 px-4 rounded-xl"
-            />
-            {errors.weightKg && (
-              <p className="text-xs text-red-500">{errors.weightKg.message}</p>
-            )}
-            <p className="text-xs text-gray-400 dark:text-gray-500">
-              Used to calculate your daily goal (WHO recommends 2-3L/day)
-            </p>
-          </div>
-
-          {/* Unit Preference */}
-          <div className="space-y-2">
-            <Label className="text-gray-700 dark:text-gray-300">
-              Preferred Unit
-            </Label>
-            <div className="grid grid-cols-2 gap-3">
-              {(["ml", "oz"] as const).map((u) => (
-                <Button
-                  key={u}
-                  type="button"
-                  variant={unit === u ? "default" : "secondary"}
-                  onClick={() => setValue("unit", u)}
-                  className={`h-12 rounded-xl font-medium transition-colors ${
-                    unit === u
-                      ? "bg-sky-500 hover:bg-sky-600 text-white"
-                      : ""
-                  }`}
-                >
-                  {u === "ml" ? "Milliliters (ml)" : "Ounces (oz)"}
-                </Button>
-              ))}
+        {/* Form card */}
+        <div className="bg-card border border-border/60 rounded-2xl p-7 shadow-xl shadow-black/5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {/* Name */}
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-sm font-semibold text-foreground">
+                Your name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                {...register("name")}
+                placeholder="e.g., Alex"
+                className="h-11 px-4 rounded-xl"
+                autoFocus
+              />
             </div>
-          </div>
 
-          {/* Calculated Goal */}
-          {weight > 0 && (
-            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 ring-0">
-              <CardContent>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Your recommended daily goal:
+            {/* Weight */}
+            <div className="space-y-1.5">
+              <Label htmlFor="weightKg" className="text-sm font-semibold text-foreground">
+                Weight <span className="font-normal text-muted-foreground">(kg)</span>
+              </Label>
+              <Input
+                id="weightKg"
+                type="number"
+                {...register("weightKg", { valueAsNumber: true })}
+                placeholder="e.g., 70"
+                min={20}
+                max={300}
+                step={0.1}
+                className="h-11 px-4 rounded-xl"
+              />
+              {errors.weightKg && (
+                <p className="text-xs text-destructive">{errors.weightKg.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Used to calculate your goal — WHO recommends ~35 ml per kg daily.
+              </p>
+            </div>
+
+            {/* Unit */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-semibold text-foreground">
+                Preferred unit
+              </Label>
+              <div className="grid grid-cols-2 gap-2.5">
+                {(["ml", "oz"] as UnitPreference[]).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setValue("unit", u)}
+                    className={`h-11 rounded-xl font-semibold text-sm border transition-all duration-150 ${
+                      unit === u
+                        ? "bg-sky-500 border-sky-500 text-white shadow-sm shadow-sky-500/20"
+                        : "bg-card border-border/60 text-foreground hover:border-sky-300 dark:hover:border-sky-700"
+                    }`}
+                  >
+                    {u === "ml" ? "Milliliters (ml)" : "Ounces (oz)"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Calculated Goal */}
+            {weight > 0 && (
+              <div className="rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200/60 dark:border-sky-800/40 p-4 space-y-0.5">
+                <p className="text-xs font-semibold text-sky-600 dark:text-sky-400 uppercase tracking-wide">
+                  Your recommended daily goal
                 </p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                <p className="text-3xl font-black text-sky-600 dark:text-sky-300 tabular-nums">
                   {unit === "oz"
                     ? `${Math.round(dailyGoalMl / 29.5735)} oz`
                     : `${dailyGoalMl.toLocaleString()} ml`}
                 </p>
-                <p className="text-xs text-blue-500 dark:text-blue-400 mt-1">
+                <p className="text-xs text-sky-500/70 dark:text-sky-400/70">
                   Based on {weight} kg &times; 35 ml/kg
                 </p>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            )}
 
-          <Button
-            type="submit"
-            disabled={!weight || weight <= 0 || onboardMutation.isPending}
-            className="w-full h-14 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:dark:bg-gray-800 disabled:dark:text-gray-500 font-semibold rounded-xl text-lg not-disabled:text-white"
-          >
-            {onboardMutation.isPending ? "Saving..." : "Start Tracking"}
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              disabled={!weight || weight <= 0 || onboardMutation.isPending}
+              className="w-full h-12 bg-sky-500 hover:bg-sky-600 active:bg-sky-700 disabled:opacity-40 text-white font-semibold rounded-xl text-base shadow-sm shadow-sky-500/20 transition-all"
+            >
+              {onboardMutation.isPending ? "Saving…" : "Start Tracking →"}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

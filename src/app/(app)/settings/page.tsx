@@ -43,6 +43,19 @@ const settingsSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="bg-card border border-border/60 rounded-2xl overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-border/50">
+        <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{title}</h2>
+      </div>
+      <div className="p-5 space-y-4">
+        {children}
+      </div>
+    </section>
+  );
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const { profile, loading, isGuest } = useHydrationContext();
@@ -183,135 +196,134 @@ export default function SettingsPage() {
 
   return (
     <>
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
         <div className="max-w-3xl mx-auto px-4 md:px-8 py-3 md:py-4 flex items-center justify-between">
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-1 text-sky-500 font-medium md:hidden"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-sky-500 hover:text-sky-600 transition-colors md:hidden"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Back
           </Link>
-          <h1 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <h1 className="text-lg md:text-xl font-bold text-foreground">Settings</h1>
           <div className="w-16 md:hidden" />
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 md:px-8 py-6 pb-24 md:pb-8">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="md:grid md:grid-cols-2 md:gap-x-12 md:gap-y-8 space-y-8 md:space-y-0">
-            <section className="space-y-4">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Profile</h2>
+          <div className="md:grid md:grid-cols-2 md:gap-5 space-y-4 md:space-y-0">
 
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="name" className="text-gray-700 dark:text-gray-300 mb-1">
-                    Name
-                  </Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    {...register("name")}
-                    className="h-12 px-4 rounded-xl"
-                  />
-                </div>
+            {/* Profile */}
+            <SectionCard title="Profile">
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-sm font-semibold text-foreground">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  {...register("name")}
+                  className="h-11 px-4 rounded-xl"
+                />
+              </div>
 
-                <div>
-                  <Label htmlFor="weightKg" className="text-gray-700 dark:text-gray-300 mb-1">
-                    Weight (kg)
-                  </Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="weightKg" className="text-sm font-semibold text-foreground">
+                  Weight (kg)
+                </Label>
+                <Input
+                  id="weightKg"
+                  type="number"
+                  {...register("weightKg", { valueAsNumber: true })}
+                  min={20}
+                  max={300}
+                  step={0.1}
+                  className="h-11 px-4 rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="dailyGoal" className="text-sm font-semibold text-foreground">
+                  Daily Goal ({unitLabel(unit)})
+                </Label>
+                <div className="flex gap-2">
                   <Input
-                    id="weightKg"
+                    id="dailyGoal"
                     type="number"
-                    {...register("weightKg", { valueAsNumber: true })}
-                    min={20}
-                    max={300}
-                    step={0.1}
-                    className="h-12 px-4 rounded-xl"
+                    {...register("dailyGoal", { valueAsNumber: true })}
+                    min={1}
+                    className="flex-1 h-11 px-4 rounded-xl"
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="dailyGoal" className="text-gray-700 dark:text-gray-300 mb-1">
-                    Daily Goal ({unitLabel(unit)})
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="dailyGoal"
-                      type="number"
-                      {...register("dailyGoal", { valueAsNumber: true })}
-                      min={1}
-                      className="flex-1 h-12 px-4 rounded-xl"
-                    />
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleRecalculateGoal}
-                      className="h-12 px-4 rounded-xl"
-                    >
-                      Recalculate
-                    </Button>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-gray-700 dark:text-gray-300 mb-1">
-                    Display Unit
-                  </Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {(["ml", "oz"] as const).map((u) => (
-                      <Button
-                        key={u}
-                        type="button"
-                        variant={unit === u ? "default" : "secondary"}
-                        onClick={() => handleUnitChange(u)}
-                        className={`h-12 rounded-xl font-medium ${
-                          unit === u
-                            ? "bg-sky-500 hover:bg-sky-600 text-white"
-                            : ""
-                        }`}
-                      >
-                        {u === "ml" ? "ml" : "oz"}
-                      </Button>
-                    ))}
-                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleRecalculateGoal}
+                    className="h-11 px-4 rounded-xl text-sm font-semibold"
+                  >
+                    Recalc
+                  </Button>
                 </div>
               </div>
-            </section>
 
-            <section className="space-y-4">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Quick Add Presets</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Customize the quick-add button amounts on the dashboard.
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-foreground">
+                  Display Unit
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(["ml", "oz"] as const).map((u) => (
+                    <button
+                      key={u}
+                      type="button"
+                      onClick={() => handleUnitChange(u)}
+                      className={`h-11 rounded-xl font-semibold text-sm border transition-all duration-150 ${
+                        unit === u
+                          ? "bg-sky-500 border-sky-500 text-white shadow-sm shadow-sky-500/20"
+                          : "bg-background border-border text-foreground hover:border-sky-300 dark:hover:border-sky-700"
+                      }`}
+                    >
+                      {u === "ml" ? "ml" : "oz"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </SectionCard>
+
+            {/* Quick Add Presets */}
+            <SectionCard title="Quick Add Presets">
+              <p className="text-xs text-muted-foreground -mt-1">
+                Amounts shown as quick-add buttons on the dashboard.
               </p>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {fields.map((field, index) => (
                   <div key={field.id} className="flex items-center gap-2">
-                    <Label htmlFor={`preset-${index}`} className="text-gray-700 dark:text-gray-300 w-20 shrink-0">
-                      Button {index + 1}
+                    <Label htmlFor={`preset-${index}`} className="text-sm font-medium text-muted-foreground w-16 shrink-0">
+                      #{index + 1}
                     </Label>
                     <Input
                       id={`preset-${index}`}
                       type="number"
                       {...register(`presets.${index}.value`)}
                       min={1}
-                      className="h-12 px-4 rounded-xl flex-1"
+                      className="h-10 px-3 rounded-xl flex-1"
                     />
-                    <span className="text-sm text-gray-500 dark:text-gray-400 w-8">
+                    <span className="text-sm text-muted-foreground w-8 shrink-0">
                       {unitLabel(unit)}
                     </span>
                   </div>
                 ))}
+              </div>
+              <div className="flex gap-2 pt-1">
                 {fields.length < 6 && (
                   <Button
                     type="button"
                     variant="secondary"
                     onClick={() => append({ value: "" })}
-                    className="h-10 rounded-xl text-sm"
+                    className="h-9 rounded-xl text-xs font-semibold"
                   >
-                    + Add Preset
+                    + Add
                   </Button>
                 )}
                 {fields.length > 1 && (
@@ -319,110 +331,111 @@ export default function SettingsPage() {
                     type="button"
                     variant="secondary"
                     onClick={() => remove(fields.length - 1)}
-                    className="h-10 rounded-xl text-sm ml-2"
+                    className="h-9 rounded-xl text-xs font-semibold"
                   >
                     Remove Last
                   </Button>
                 )}
               </div>
-            </section>
+            </SectionCard>
 
-            <section className="space-y-4">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Reminders</h2>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between py-2">
-                  <Label className="text-gray-700 dark:text-gray-300">Enable Reminders</Label>
-                  <Switch
-                    checked={reminderEnabled}
-                    onCheckedChange={(checked) => setValue("reminderEnabled", checked)}
-                  />
+            {/* Reminders */}
+            <SectionCard title="Reminders">
+              <div className="flex items-center justify-between py-1">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Enable Reminders</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Get nudged to drink water during active hours.</p>
                 </div>
-
-                {reminderEnabled && (
-                  <>
-                    <div>
-                      <Label htmlFor="interval" className="text-gray-700 dark:text-gray-300 mb-1">
-                        Reminder Interval
-                      </Label>
-                      <Select
-                        value={watch("reminderInterval")}
-                        onValueChange={(val) => { if (val) setValue("reminderInterval", val); }}
-                      >
-                        <SelectTrigger className="w-full h-12 px-4 rounded-xl">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">Every 1 hour</SelectItem>
-                          <SelectItem value="2">Every 2 hours</SelectItem>
-                          <SelectItem value="3">Every 3 hours</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="activeStart" className="text-gray-700 dark:text-gray-300 mb-1">
-                          Active From
-                        </Label>
-                        <Input
-                          id="activeStart"
-                          type="time"
-                          {...register("activeStart")}
-                          className="h-12 px-4 rounded-xl"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="activeEnd" className="text-gray-700 dark:text-gray-300 mb-1">
-                          Active Until
-                        </Label>
-                        <Input
-                          id="activeEnd"
-                          type="time"
-                          {...register("activeEnd")}
-                          className="h-12 px-4 rounded-xl"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+                <Switch
+                  checked={reminderEnabled}
+                  onCheckedChange={(checked) => setValue("reminderEnabled", checked)}
+                />
               </div>
-            </section>
+
+              {reminderEnabled && (
+                <>
+                  <Separator />
+                  <div className="space-y-1.5">
+                    <Label htmlFor="interval" className="text-sm font-semibold text-foreground">
+                      Reminder Interval
+                    </Label>
+                    <Select
+                      value={watch("reminderInterval")}
+                      onValueChange={(val) => { if (val) setValue("reminderInterval", val); }}
+                    >
+                      <SelectTrigger className="w-full h-11 px-4 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Every 1 hour</SelectItem>
+                        <SelectItem value="2">Every 2 hours</SelectItem>
+                        <SelectItem value="3">Every 3 hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="activeStart" className="text-sm font-semibold text-foreground">
+                        Active From
+                      </Label>
+                      <Input
+                        id="activeStart"
+                        type="time"
+                        {...register("activeStart")}
+                        className="h-11 px-4 rounded-xl"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="activeEnd" className="text-sm font-semibold text-foreground">
+                        Active Until
+                      </Label>
+                      <Input
+                        id="activeEnd"
+                        type="time"
+                        {...register("activeEnd")}
+                        className="h-11 px-4 rounded-xl"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </SectionCard>
           </div>
 
-          <div className="mt-8 space-y-8 max-w-md md:max-w-sm">
+          {/* Save */}
+          <div className="mt-5 max-w-sm">
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-14 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-300 text-white font-semibold rounded-xl text-lg"
+              className="w-full h-12 bg-sky-500 hover:bg-sky-600 active:bg-sky-700 disabled:opacity-40 text-white font-semibold rounded-xl text-base shadow-sm shadow-sky-500/20 transition-all"
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </form>
 
-        <div className="mt-8 space-y-8 max-w-md md:max-w-sm">
-          <section className="space-y-4">
-            <Separator />
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Account</h2>
+        {/* Account */}
+        <div className="mt-5 space-y-3 max-w-sm">
+          <Separator />
+          <h2 className="text-xs font-bold text-muted-foreground uppercase tracking-widest pt-2">Account</h2>
 
-            {isGuest && (
-              <Button
-                onClick={handleUpgradeFromGuest}
-                className="w-full h-12 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl"
-              >
-                Upgrade to Google Account
-              </Button>
-            )}
-
+          {isGuest && (
             <Button
-              variant="destructive"
-              onClick={handleSignOut}
-              className="w-full h-12 rounded-xl"
+              onClick={handleUpgradeFromGuest}
+              className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl shadow-sm shadow-emerald-500/20"
             >
-              {isGuest ? "Clear Data & Exit" : "Sign Out"}
+              Upgrade to Google Account
             </Button>
-          </section>
+          )}
+
+          <Button
+            variant="destructive"
+            onClick={handleSignOut}
+            className="w-full h-12 rounded-xl font-semibold"
+          >
+            {isGuest ? "Clear Data & Exit" : "Sign Out"}
+          </Button>
         </div>
       </main>
     </>

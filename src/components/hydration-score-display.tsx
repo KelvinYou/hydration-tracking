@@ -1,53 +1,38 @@
 "use client";
 
 import { HydrationScore } from "@/types";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface HydrationScoreDisplayProps {
   score: HydrationScore;
 }
 
-const LEVEL_STYLES: Record<HydrationScore["level"], { bg: string; text: string; badge: string; icon: React.ReactNode }> = {
+const LEVEL_CONFIG: Record<
+  HydrationScore["level"],
+  { accent: string; glow: string; badge: string; label: string }
+> = {
   excellent: {
-    bg: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
-    text: "text-green-600 dark:text-green-300",
+    accent: "#22c55e",
+    glow: "rgba(34,197,94,0.15)",
     badge: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300",
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
+    label: "Excellent",
   },
   good: {
-    bg: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
-    text: "text-blue-600 dark:text-blue-300",
-    badge: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
+    accent: "#0284c7",
+    glow: "rgba(2,132,199,0.15)",
+    badge: "bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300",
+    label: "Good",
   },
   fair: {
-    bg: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800",
-    text: "text-yellow-600 dark:text-yellow-300",
+    accent: "#eab308",
+    glow: "rgba(234,179,8,0.15)",
     badge: "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300",
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-      </svg>
-    ),
+    label: "Fair",
   },
   poor: {
-    bg: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
-    text: "text-red-600 dark:text-red-300",
+    accent: "#ef4444",
+    glow: "rgba(239,68,68,0.15)",
     badge: "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300",
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-      </svg>
-    ),
+    label: "Poor",
   },
 };
 
@@ -56,57 +41,96 @@ export function HydrationScoreDisplay({ score }: HydrationScoreDisplayProps) {
 
   if (isEmpty) {
     return (
-      <Card className="ring-0 bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-800">
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Hydration Score
-              </p>
-              <div className="flex items-center gap-2 mt-0.5 text-gray-400 dark:text-gray-500">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-4xl font-bold leading-none tabular-nums">—</p>
-              </div>
-              <Badge className="mt-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-0">
-                Log a drink to get started
-              </Badge>
-            </div>
-            <div className="text-right text-xs text-gray-400 dark:text-gray-500 space-y-1">
-              <p>Volume: —</p>
-              <p>Distribution: —</p>
-            </div>
+      <div className="rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm p-4 shadow-sm">
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+          Hydration Score
+        </p>
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="text-5xl font-black tabular-nums text-muted-foreground/40 leading-none">
+              —
+            </span>
+            <p className="text-xs text-muted-foreground mt-2">Log a drink to start</p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-right space-y-1.5">
+            <ScoreBar label="Volume" value={0} />
+            <ScoreBar label="Rhythm" value={0} />
+          </div>
+        </div>
+      </div>
     );
   }
 
-  const styles = LEVEL_STYLES[score.level];
+  const cfg = LEVEL_CONFIG[score.level];
 
   return (
-    <Card className={`ring-0 transition-colors duration-300 ${styles.bg}`}>
-      <CardContent>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Hydration Score
-            </p>
-            <div className={`flex items-center gap-2 mt-0.5 transition-colors duration-300 ${styles.text}`}>
-              {styles.icon}
-              <p className="text-4xl font-bold leading-none tabular-nums">{score.total}</p>
-            </div>
-            <Badge className={`mt-1 ${styles.badge} border-0`}>
+    <div
+      className="rounded-2xl border border-border/50 bg-card/70 backdrop-blur-sm p-4 shadow-sm overflow-hidden relative transition-all duration-500"
+      style={{ boxShadow: `0 0 0 1px ${cfg.accent}20, 0 4px 24px ${cfg.glow}` }}
+    >
+      {/* Subtle color accent at top */}
+      <div
+        className="absolute top-0 inset-x-0 h-[2px] rounded-t-2xl transition-colors duration-500"
+        style={{ background: `linear-gradient(90deg, transparent, ${cfg.accent}, transparent)` }}
+      />
+
+      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
+        Hydration Score
+      </p>
+
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <span
+            className="text-5xl font-black tabular-nums leading-none transition-colors duration-500"
+            style={{ color: cfg.accent }}
+          >
+            {score.total}
+          </span>
+          <div className="mt-2">
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cfg.badge}`}
+            >
               {score.label}
-            </Badge>
-          </div>
-          <div className="text-right text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <p>Volume: {score.volumeScore}%</p>
-            <p>Distribution: {score.distributionScore}%</p>
+            </span>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="space-y-2 pb-0.5 shrink-0">
+          <ScoreBar label="Volume" value={score.volumeScore} color={cfg.accent} />
+          <ScoreBar label="Rhythm" value={score.distributionScore} color={cfg.accent} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ScoreBar({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color?: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-muted-foreground w-12 text-right leading-none">
+        {label}
+      </span>
+      <div className="w-16 h-1.5 rounded-full bg-muted/60 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700 ease-out"
+          style={{
+            width: `${value}%`,
+            background: color ?? "currentColor",
+            opacity: color ? 1 : 0.3,
+          }}
+        />
+      </div>
+      <span className="text-[10px] font-semibold text-muted-foreground tabular-nums w-7 leading-none">
+        {value}%
+      </span>
+    </div>
   );
 }

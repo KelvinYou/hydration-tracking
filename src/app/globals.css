@@ -135,6 +135,34 @@ body {
   }
 }
 
+@keyframes landing-float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  40% { transform: translateY(-8px) rotate(0.4deg); }
+  70% { transform: translateY(-5px) rotate(-0.3deg); }
+}
+
+@keyframes ring-fill {
+  from { stroke-dashoffset: 263.9; }
+  to { stroke-dashoffset: 34; }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.landing-float {
+  animation: landing-float 9s ease-in-out infinite;
+}
+
+.landing-ring-fill {
+  animation: ring-fill 1.6s cubic-bezier(0.34, 1.1, 0.64, 1) 0.4s both;
+}
+
+.landing-fade-up {
+  animation: fade-up 0.6s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -145,3 +173,32 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Dashboard ambient animations */
+@keyframes ambient-blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(22px, -16px) scale(1.08); }
+  66% { transform: translate(-14px, 13px) scale(0.93); }
+}
+
+@keyframes slide-up-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes shimmer-x {
+  from { background-position: -200% center; }
+  to { background-position: 200% center; }
+}
+
+.db-animate-1 { animation: slide-up-in 0.45s ease-out 0.04s both; }
+.db-animate-2 { animation: slide-up-in 0.45s ease-out 0.12s both; }
+.db-animate-3 { animation: slide-up-in 0.45s ease-out 0.20s both; }
+.db-animate-4 { animation: slide-up-in 0.45s ease-out 0.28s both; }
+.db-animate-5 { animation: slide-up-in 0.45s ease-out 0.36s both; }
+.db-animate-6 { animation: slide-up-in 0.45s ease-out 0.44s both; }
